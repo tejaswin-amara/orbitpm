@@ -40,12 +40,24 @@ jobs:
               path.write_text("---\n" + documents[-1].lstrip() + "\n")
           PY
 
+      - name: Apply pnpm security fixes
+        shell: bash
+        run: |
+          pnpm audit --fix
+
       - name: Refresh lockfile
         run: pnpm install --lockfile-only
+
+      - name: Verify production audit
+        shell: bash
+        run: |
+          pnpm audit --prod
 
       - name: Upload lockfile
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: generated-pnpm-lock
-          path: pnpm-lock.yaml
+          path: |
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
           if-no-files-found: error
