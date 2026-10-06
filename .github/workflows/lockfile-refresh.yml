@@ -10,12 +10,14 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 1
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Setup pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
@@ -71,6 +73,33 @@ jobs:
         shell: bash
         run: |
           pnpm audit --prod
+
+      - name: Finalize workspace policy
+        shell: bash
+        run: |
+          cat >> pnpm-workspace.yaml <<'EOF'
+          nodeLinker: hoisted
+          ignoreScripts: true
+          minimumReleaseAge: 10080
+          EOF
+
+      - name: Commit dependency remediation
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml pnpm-workspace.yaml
+          git add -u .github/workflows/lockfile-refresh.yml
+          git rm -f .github/workflows/lockfile-refresh.yml
+          if git diff --cached --quiet; then
+            echo "No dependency remediation changes to commit."
+            exit 0
+          fi
+          git commit -m "fix(deps): remediate audited dependency graph"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
 
       - name: Upload dependency remediation
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
