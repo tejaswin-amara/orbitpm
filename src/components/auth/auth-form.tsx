@@ -7,6 +7,102 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
+export interface AuthErrorLike {
+  message?: string | null;
+  code?: string | null;
+  status?: number | null;
+}
+
+export function getAuthErrorMessage(
+  mode: "sign-in" | "sign-up",
+  error?: AuthErrorLike | string | null,
+): string {
+  if (mode === "sign-up") {
+    const rawMsg = typeof error === "string" ? error : (error?.message ?? "");
+    const rawCode = typeof error === "object" ? (error?.code ?? "") : "";
+    const lowerMsg = rawMsg.toLowerCase();
+    const upperCode = rawCode.toUpperCase();
+
+    // 1. Email already in use
+    if (
+      upperCode === "USER_ALREADY_EXISTS" ||
+      upperCode === "USER_EXISTS" ||
+      lowerMsg.includes("already exists") ||
+      lowerMsg.includes("already in use") ||
+      lowerMsg.includes("user exists") ||
+      lowerMsg.includes("email exists") ||
+      lowerMsg.includes("duplicate")
+    ) {
+      return "Email already in use.";
+    }
+
+    // 2. Suppress login errors leaking into sign-up (e.g. "Authentication failed.", "Invalid email or password", "Invalid credentials")
+    if (
+      lowerMsg.includes("authentication failed") ||
+      lowerMsg.includes("invalid credentials") ||
+      lowerMsg.includes("invalid email or password") ||
+      lowerMsg.includes("sign in") ||
+      lowerMsg.includes("login")
+    ) {
+      return "Failed to create account. Please try again.";
+    }
+
+    // 3. Password requirements not met
+    if (
+      upperCode === "PASSWORD_TOO_SHORT" ||
+      upperCode === "INVALID_PASSWORD" ||
+      upperCode === "PASSWORD_REQUIREMENTS_NOT_MET" ||
+      (lowerMsg.includes("password") &&
+        (lowerMsg.includes("short") ||
+          lowerMsg.includes("length") ||
+          lowerMsg.includes("character") ||
+          lowerMsg.includes("requirement") ||
+          lowerMsg.includes("meet") ||
+          lowerMsg.includes("invalid") ||
+          lowerMsg.includes("weak")))
+    ) {
+      return "Password does not meet requirements.";
+    }
+
+    // 4. Invalid email format
+    if (upperCode === "INVALID_EMAIL" || lowerMsg.includes("invalid email")) {
+      return "Please enter a valid email address.";
+    }
+
+    // 5. If there is a clean descriptive user-facing message that isn't a login error or internal crash
+    if (
+      rawMsg &&
+      !lowerMsg.includes("failed") &&
+      !lowerMsg.includes("error") &&
+      !lowerMsg.includes("internal") &&
+      !lowerMsg.includes("500")
+    ) {
+      return rawMsg;
+    }
+
+    // 6. Generic registration fallback
+    return "Failed to create account. Please try again.";
+  }
+
+  // mode === "sign-in"
+  const rawMsg = typeof error === "string" ? error : (error?.message ?? "");
+  const rawCode = typeof error === "object" ? (error?.code ?? "") : "";
+  const lowerMsg = rawMsg.toLowerCase();
+  const upperCode = rawCode.toUpperCase();
+
+  if (
+    upperCode === "INVALID_EMAIL_OR_PASSWORD" ||
+    upperCode === "INVALID_CREDENTIALS" ||
+    lowerMsg.includes("invalid email or password") ||
+    lowerMsg.includes("invalid credentials") ||
+    lowerMsg.includes("user not found")
+  ) {
+    return "Invalid email or password.";
+  }
+
+  return rawMsg || "Authentication failed.";
+}
+
 export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -18,18 +114,33 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setPending(true);
-    const result =
-      mode === "sign-in"
-        ? await authClient.signIn.email({ email, password })
-        : await authClient.signUp.email({ email, password, name });
-    setPending(false);
-    if (result.error) {
-      setError(result.error.message ?? "Authentication failed.");
+
+    if (mode === "sign-up" && password.length < 10) {
+      setError("Password does not meet requirements.");
       return;
     }
-    router.push("/app");
-    router.refresh();
+
+    setPending(true);
+    try {
+      const result =
+        mode === "sign-in"
+          ? await authClient.signIn.email({ email, password })
+          : await authClient.signUp.email({ email, password, name });
+      setPending(false);
+      if (result.error) {
+        setError(getAuthErrorMessage(mode, result.error));
+        return;
+      }
+      router.push("/app");
+      router.refresh();
+    } catch {
+      setPending(false);
+      setError(
+        mode === "sign-up"
+          ? "Failed to create account. Please try again."
+          : "Authentication failed. Please try again.",
+      );
+    }
   }
 
   return (
@@ -88,7 +199,11 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           />
         </label>
         {error && (
-          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+          <p
+            role="alert"
+            data-testid="auth-error"
+            className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300"
+          >
             {error}
           </p>
         )}
