@@ -13,21 +13,17 @@ test.describe("Tier 1: Smoke & Static Viewport Sanity", () => {
     expect(response?.status()).toBe(200);
 
     // Brand and primary navigation
-    await expect(page.getByRole("link", { name: "OrbitPM" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /orbitpm|origins/i })).toBeVisible();
     await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Get started" })).toBeVisible();
 
-    // Hero content
-    await expect(
-      page.getByRole("heading", { name: /project management without the infrastructure tax/i }),
-    ).toBeVisible();
-
-    // Feature highlights
-    await expect(page.getByRole("heading", { name: /projects that stay legible/i })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /authorization by default/i })).toBeVisible();
+    // Hero content & Origins company branding
+    await expect(page.getByRole("heading", { name: /origins/i })).toBeVisible();
+    await expect(page.getByText(/rise • conquer • evolve/i)).toBeVisible();
+    await expect(page.getByText(/internal operations workspace/i)).toBeVisible();
 
     // Footer landmark
-    await expect(page.getByText("OrbitPM · 2026")).toBeVisible();
+    await expect(page.getByText(/origins internal portal/i)).toBeVisible();
   });
 
   test("sign-in page (/sign-in) renders centered auth card and interactive form", async ({

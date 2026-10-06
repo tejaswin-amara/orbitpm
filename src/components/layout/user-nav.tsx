@@ -4,6 +4,7 @@ import { ChevronDown, FolderKanban, LayoutDashboard, LogOut, ShieldCheck } from 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -136,6 +137,14 @@ export function UserNav({ user, className }: UserNavProps) {
               <FolderKanban className="size-3.5" />
               <span>Projects</span>
             </Link>
+          </div>
+
+          {/* Theme Selector */}
+          <div className="border-t border-border/60 px-3 py-2">
+            <p className="mb-1.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+              Theme
+            </p>
+            <ThemeToggle variant="pill" className="w-full justify-between" />
           </div>
 
           {/* Sign Out */}

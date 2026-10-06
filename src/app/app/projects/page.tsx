@@ -8,10 +8,12 @@ import { requireSession } from "@/lib/session";
 
 export default async function ProjectsPage() {
   await requireSession();
-  const projects = await prisma.project.findMany({
-    include: { _count: { select: { tasks: true } } },
-    orderBy: { updatedAt: "desc" },
-  });
+  const projects = await prisma.project
+    .findMany({
+      include: { _count: { select: { tasks: true } } },
+      orderBy: { updatedAt: "desc" },
+    })
+    .catch(() => []);
 
   return (
     <div className="h-full w-full overflow-y-auto spatial-scrollbar p-5 sm:p-7">

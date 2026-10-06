@@ -94,7 +94,7 @@ export function OrbitAssistantModal({
       />
 
       {/* Modal Surface */}
-      <div className="relative z-10 w-full max-w-xl rounded-2xl border border-indigo-500/30 bg-slate-950/90 shadow-2xl backdrop-blur-2xl overflow-hidden flex flex-col text-foreground animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-full max-w-xl rounded-2xl border border-indigo-500/30 bg-card/95 shadow-2xl backdrop-blur-2xl overflow-hidden flex flex-col text-foreground animate-in fade-in zoom-in-95 duration-200">
         {/* Input Header */}
         <form
           onSubmit={handleSubmit}
@@ -242,7 +242,9 @@ export function OrbitAssistantModal({
               <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-xs text-muted-foreground">
                 OrbitPM is maintaining all delivery milestones inside a strict zero-scroll spatial
                 architecture. Use{" "}
-                <kbd className="rounded-sm bg-slate-800 px-1.5 py-0.5 text-[10px]">Cmd+K</kbd>{" "}
+                <kbd className="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border/60">
+                  Cmd+K
+                </kbd>{" "}
                 anytime to query project state.
               </div>
             )}

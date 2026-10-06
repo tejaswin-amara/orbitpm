@@ -7,17 +7,19 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
   await requireSession();
   const { projectId } = await params;
 
-  const project = await prisma.project.findFirst({
-    where: { id: projectId },
-    include: {
-      comments: {
-        include: { author: { select: { name: true } } },
-        orderBy: { createdAt: "desc" },
-        take: 20,
+  const project = await prisma.project
+    .findFirst({
+      where: { id: projectId },
+      include: {
+        comments: {
+          include: { author: { select: { name: true } } },
+          orderBy: { createdAt: "desc" },
+          take: 20,
+        },
+        _count: { select: { tasks: true } },
       },
-      _count: { select: { tasks: true } },
-    },
-  });
+    })
+    .catch(() => null);
 
   if (!project) {
     return (

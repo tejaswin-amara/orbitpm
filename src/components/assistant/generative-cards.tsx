@@ -38,7 +38,7 @@ export function SprintSummaryCard({ data }: { data: SprintSummaryData }) {
             {data.completedTasks} / {data.totalTasks} tasks done
           </span>
         </div>
-        <div className="h-2 w-full rounded-full bg-slate-800/80 overflow-hidden p-0.5">
+        <div className="h-2 w-full rounded-full bg-muted overflow-hidden p-0.5">
           <div
             className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-700"
             style={{ width: `${Math.min(100, Math.max(0, data.completionRate))}%` }}
@@ -48,7 +48,7 @@ export function SprintSummaryCard({ data }: { data: SprintSummaryData }) {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-4 gap-2 pt-1 text-center">
-        <div className="rounded-xl border border-slate-800/60 bg-slate-900/40 p-2">
+        <div className="rounded-xl border border-border/60 bg-muted/40 p-2">
           <div className="text-xs text-muted-foreground">Todo</div>
           <div className="text-sm font-semibold text-foreground">{data.todoTasks}</div>
         </div>
@@ -225,10 +225,10 @@ export function TaskListCard({
           >
             <span className="font-medium text-foreground truncate mr-2">{task.title}</span>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="rounded-md bg-slate-800 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              <span className="rounded-md bg-muted border border-border/40 px-1.5 py-0.5 text-[10px] text-muted-foreground">
                 {task.status}
               </span>
-              <span className="rounded-md bg-cyan-950/60 px-1.5 py-0.5 text-[10px] text-cyan-300">
+              <span className="rounded-md bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.5 text-[10px] text-cyan-600 dark:text-cyan-300">
                 {task.priority}
               </span>
             </div>

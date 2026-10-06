@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 
 test("landing page is usable", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /project management/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /origins/i })).toBeVisible();
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations).toEqual([]);
 });

@@ -25,7 +25,7 @@ test.describe("Challenger Interactive Controls & Layout Shift Stress", () => {
     });
 
     // 2. Hover over magnetic buttons and spotlight cards
-    const heroBtn = page.getByRole("button", { name: /create account/i });
+    const heroBtn = page.getByRole("button", { name: /(create account|enter workspace)/i });
     if (await heroBtn.isVisible()) {
       await heroBtn.hover();
       await page.waitForTimeout(100);
@@ -230,5 +230,57 @@ test.describe("Challenger Interactive Controls & Layout Shift Stress", () => {
 
     const bodyOverflowUnlocked3 = await page.evaluate(() => document.body.style.overflow);
     expect(bodyOverflowUnlocked3).toBe("");
+  });
+
+  test("Global Theme Toggle dynamically toggles between dark and light themes without scroll jumps or layout breaks", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto("/");
+
+    // 1. Locate theme toggle on landing page
+    const toggleBtn = page.getByTestId("theme-toggle");
+    await expect(toggleBtn).toBeVisible();
+
+    // 2. Initial state defaults to dark
+    const initialIsDark = await page.evaluate(
+      () =>
+        document.documentElement.classList.contains("dark") &&
+        document.documentElement.getAttribute("data-theme") === "dark",
+    );
+    expect(initialIsDark, "Default theme should be dark").toBe(true);
+
+    // 3. Toggle to light mode
+    await toggleBtn.click();
+    const isLight = await page.evaluate(
+      () =>
+        document.documentElement.classList.contains("light") &&
+        document.documentElement.getAttribute("data-theme") === "light" &&
+        localStorage.getItem("orbitpm-theme") === "light",
+    );
+    expect(isLight, "Theme must switch to light mode and persist in localStorage").toBe(true);
+    await assertZeroBodyScroll(page);
+
+    // 4. Toggle back to dark mode
+    await toggleBtn.click();
+    const isDarkAgain = await page.evaluate(
+      () =>
+        document.documentElement.classList.contains("dark") &&
+        document.documentElement.getAttribute("data-theme") === "dark" &&
+        localStorage.getItem("orbitpm-theme") === "dark",
+    );
+    expect(isDarkAgain, "Theme must toggle back to dark mode").toBe(true);
+    await assertZeroBodyScroll(page);
+
+    // 5. Verify theme toggle functions on auth pages as well
+    await page.goto("/sign-in");
+    const authToggleBtn = page.getByTestId("theme-toggle");
+    await expect(authToggleBtn).toBeVisible();
+    await authToggleBtn.click();
+    const authIsLight = await page.evaluate(() =>
+      document.documentElement.classList.contains("light"),
+    );
+    expect(authIsLight, "Theme must toggle to light mode on auth pages").toBe(true);
+    await assertZeroBodyScroll(page);
   });
 });

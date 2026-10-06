@@ -4,6 +4,7 @@ import { FolderKanban, LayoutDashboard, LogOut, Sparkles, X } from "lucide-react
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -168,6 +169,12 @@ export function MobileNavContent({
           </div>
           <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
         </button>
+
+        {/* Theme Preference */}
+        <div className="pt-2">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">Theme</p>
+          <ThemeToggle variant="pill" className="w-full justify-between" />
+        </div>
       </div>
 
       {/* User Session Footer */}

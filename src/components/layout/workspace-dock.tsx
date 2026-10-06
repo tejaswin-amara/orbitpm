@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MobileNavContent, MobileSheet } from "@/components/layout/mobile-sheet";
 import { UserNav } from "@/components/layout/user-nav";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { cn } from "@/lib/utils";
 
 export interface WorkspaceDockUser {
@@ -140,8 +141,10 @@ export function WorkspaceDock({
           </button>
         </div>
 
-        {/* Right: Quick Action, Session Indicator, User Profile */}
+        {/* Right: Quick Action, Session Indicator, Theme Toggle, User Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
+
           <Link
             href="/app/projects"
             className="hidden items-center gap-1.5 rounded-xl border border-border/70 bg-card px-2.5 py-1.5 text-xs font-medium text-foreground transition-all hover:bg-muted/50 sm:inline-flex"

@@ -418,7 +418,7 @@ export function ProjectBoard({ projectId }: { projectId: string }) {
           />
 
           {/* Slide-over panel */}
-          <div className="relative z-10 flex h-full w-full sm:w-[480px] flex-col border-l border-border/80 bg-slate-950/95 p-6 shadow-2xl backdrop-blur-2xl text-foreground animate-in slide-in-from-right duration-200">
+          <div className="relative z-10 flex h-full w-full sm:w-[480px] flex-col border-l border-border/80 bg-card/95 p-6 shadow-2xl backdrop-blur-2xl text-foreground animate-in slide-in-from-right duration-200">
             {/* Inspector Header */}
             <div className="flex items-center justify-between pb-4 border-b border-border/60">
               <div className="flex items-center gap-2">

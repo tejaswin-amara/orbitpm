@@ -146,19 +146,22 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   return (
     <section className="glass w-full max-w-md rounded-3xl p-7 sm:p-9">
       <div className="mb-8">
-        <Link href="/" className="text-sm font-semibold text-slate-500">
+        <Link
+          href="/"
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
           OrbitPM
         </Link>
-        <h1 className="mt-5 text-3xl font-semibold tracking-tight">
+        <h1 className="mt-5 text-3xl font-semibold tracking-tight text-foreground">
           {mode === "sign-in" ? "Welcome back" : "Create account"}
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-muted-foreground">
           {mode === "sign-in" ? "Sign in to continue to your projects." : ""}
         </p>
       </div>
       <form className="space-y-4" onSubmit={submit}>
         {mode === "sign-up" && (
-          <label htmlFor="name" className="block text-sm font-medium">
+          <label htmlFor="name" className="block text-sm font-medium text-foreground">
             Name
             <Input
               value={name}
@@ -171,7 +174,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             />
           </label>
         )}
-        <label htmlFor="email" className="block text-sm font-medium">
+        <label htmlFor="email" className="block text-sm font-medium text-foreground">
           Email
           <Input
             value={email}
@@ -184,7 +187,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             className="mt-2"
           />
         </label>
-        <label htmlFor="password" className="block text-sm font-medium">
+        <label htmlFor="password" className="block text-sm font-medium text-foreground">
           Password
           <Input
             value={password}
@@ -202,7 +205,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           <p
             role="alert"
             data-testid="auth-error"
-            className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300"
+            className="rounded-xl border border-destructive/20 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-300 transition-colors"
           >
             {error}
           </p>
@@ -211,11 +214,11 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           {pending ? "Working…" : mode === "sign-in" ? "Sign in" : "Create account"}
         </Button>
       </form>
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         {mode === "sign-in" ? "Need an account?" : "Already have an account?"}{" "}
         <Link
           href={mode === "sign-in" ? "/sign-up" : "/sign-in"}
-          className="font-medium text-slate-900 dark:text-white"
+          className="font-medium text-foreground underline-offset-4 hover:underline transition-colors"
         >
           {mode === "sign-in" ? "Create one" : "Sign in"}
         </Link>

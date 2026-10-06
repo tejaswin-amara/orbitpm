@@ -1,23 +1,11 @@
-import { ArrowRight, CheckCircle2, KanbanSquare, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { MagneticButton } from "@/components/react-bits/MagneticButton";
 import { ParticlesBackground } from "@/components/react-bits/ParticlesBackground";
 import { SplitText } from "@/components/react-bits/SplitText";
 import SpotlightCard from "@/components/react-bits/SpotlightCard";
-
-const capabilities = [
-  [
-    KanbanSquare,
-    "Projects that stay legible",
-    "A calm Kanban workflow with priorities, due dates, descriptions, and ownership.",
-  ],
-  [ShieldCheck, "Authorization by default", "Role checks stay on the server, not in the browser."],
-  [
-    Sparkles,
-    "Vercel-native operations",
-    "One Next.js deployment, one PostgreSQL database, previews, analytics, and automated quality gates.",
-  ],
-] as const;
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export default function HomePage() {
   return (
@@ -33,14 +21,29 @@ export default function HomePage() {
         >
           <Link
             href="/"
-            className="flex items-center gap-2.5 text-base font-semibold tracking-tight text-foreground"
+            aria-label="OrbitPM - Origins"
+            className="flex items-center gap-2.5 text-base font-bold tracking-wider text-foreground uppercase"
           >
-            <div className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 shadow-sm shadow-indigo-500/20">
-              <span className="size-2 rounded-full bg-white ring-2 ring-white/50" />
-            </div>
-            <span>OrbitPM</span>
+            <Image
+              src="/origins-logo-dark.webp"
+              alt="Origins Logo"
+              width={28}
+              height={28}
+              priority
+              className="hidden dark:block size-7 object-contain"
+            />
+            <Image
+              src="/origins-logo-light.png"
+              alt="Origins Logo"
+              width={28}
+              height={28}
+              priority
+              className="block dark:hidden size-7 object-contain"
+            />
+            <span>Origins</span>
           </Link>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link
               href="/sign-in"
               className="rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
@@ -57,68 +60,75 @@ export default function HomePage() {
         </nav>
       </header>
 
-      {/* Main spatial content canvas: scrollable on small screens, neatly fitted on 1080p+ */}
-      <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden spatial-scrollbar flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative z-10">
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-6 py-2">
-          {/* Hero Section */}
-          <section className="text-center">
-            <SpotlightCard
-              className="custom-spotlight-card border border-border/80 bg-card/60 p-6 sm:p-8 shadow-xl backdrop-blur-xl"
-              spotlightColor="rgba(99, 102, 241, 0.18)"
-            >
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orbit-indigo/30 bg-orbit-indigo/10 px-3 py-1 text-xs font-medium text-cyan-300">
-                <CheckCircle2 className="size-3.5 text-cyan-400" />
-                <span>Built for focused teams</span>
-              </div>
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
-                <SplitText text="Project management without the infrastructure tax." />
-              </h1>
-              <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-muted-foreground">
-                Projects, tasks, priorities, discussion, and delivery visibility in a single
-                Vercel-native application.
-              </p>
-              <div className="mt-6 flex flex-col justify-center items-center gap-3 sm:flex-row relative z-10">
-                <Link href="/sign-up">
-                  <MagneticButton className="gap-2 rounded-xl bg-foreground px-5 py-2.5 text-xs sm:text-sm font-medium text-background hover:bg-foreground/90 transition-colors shadow-md">
-                    Create account <ArrowRight className="size-4" />
-                  </MagneticButton>
-                </Link>
-                <Link href="#features">
-                  <MagneticButton className="rounded-xl border border-border/80 bg-muted/40 px-5 py-2.5 text-xs sm:text-sm font-medium text-foreground hover:bg-muted/70 transition-colors">
-                    See the workflow
-                  </MagneticButton>
-                </Link>
-              </div>
-            </SpotlightCard>
-          </section>
+      {/* Main spatial content canvas: zero-scroll, contained internal tool hero */}
+      <main className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden spatial-scrollbar flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8 relative z-10">
+        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center items-center py-2">
+          <SpotlightCard
+            className="w-full custom-spotlight-card border border-border/80 bg-card/60 p-6 sm:p-10 shadow-2xl backdrop-blur-xl text-center rounded-2xl"
+            spotlightColor="rgba(99, 102, 241, 0.18)"
+          >
+            {/* Internal Access Badge */}
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-muted/40 px-3.5 py-1 text-xs font-semibold tracking-wide text-muted-foreground">
+              <Lock className="size-3 text-cyan-600 dark:text-cyan-400" />
+              <span>Internal Operations Workspace</span>
+            </div>
 
-          {/* Features Grid */}
-          <section id="features" className="grid gap-3 sm:gap-4 md:grid-cols-3">
-            {capabilities.map(([Icon, title, copy]) => (
-              <SpotlightCard
-                key={title}
-                className="border border-border/60 bg-card/50 p-5 shadow-sm backdrop-blur-md transition-transform hover:-translate-y-0.5"
-                spotlightColor="rgba(255, 255, 255, 0.08)"
-              >
-                <div className="mb-3.5 flex size-10 items-center justify-center rounded-xl bg-muted border border-border/60 text-foreground relative z-10 shadow-xs">
-                  <Icon className="size-4 text-cyan-400" />
-                </div>
-                <h2 className="text-sm sm:text-base font-semibold text-foreground relative z-10">
-                  {title}
-                </h2>
-                <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed relative z-10">
-                  {copy}
-                </p>
-              </SpotlightCard>
-            ))}
-          </section>
+            {/* Company Logo Display */}
+            <div className="mb-6 flex justify-center items-center">
+              <Image
+                src="/origins-logo-dark.webp"
+                alt="Origins - Rise • Conquer • Evolve"
+                width={160}
+                height={200}
+                priority
+                className="hidden dark:block h-28 sm:h-36 w-auto object-contain drop-shadow-xl"
+              />
+              <Image
+                src="/origins-logo-light.png"
+                alt="Origins - Rise • Conquer • Evolve"
+                width={200}
+                height={200}
+                priority
+                className="block dark:hidden h-28 sm:h-36 w-auto object-contain drop-shadow-md"
+              />
+            </div>
+
+            {/* Typography Heading & Tagline */}
+            <h1
+              aria-label="Origins"
+              className="text-3xl sm:text-4xl font-black tracking-widest uppercase text-foreground leading-tight"
+            >
+              <SplitText text="ORIGINS" />
+            </h1>
+            <p className="mt-2 text-xs sm:text-sm font-bold tracking-[0.25em] text-muted-foreground uppercase">
+              Rise • Conquer • Evolve
+            </p>
+
+            <p className="mx-auto mt-4 max-w-md text-xs sm:text-sm text-muted-foreground/90 leading-relaxed">
+              Internal project management, operations tracking, and mission-critical execution.
+            </p>
+
+            {/* Workspace Entry Actions */}
+            <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-3 relative z-10">
+              <Link href="/app" className="w-full sm:w-auto">
+                <MagneticButton className="w-full sm:w-auto gap-2 rounded-xl bg-foreground px-6 py-2.5 text-xs sm:text-sm font-semibold text-background hover:bg-foreground/90 transition-colors shadow-md">
+                  Enter Workspace <ArrowRight className="size-4" />
+                </MagneticButton>
+              </Link>
+              <Link href="/sign-in" className="w-full sm:w-auto">
+                <MagneticButton className="w-full sm:w-auto rounded-xl border border-border/80 bg-muted/40 px-6 py-2.5 text-xs sm:text-sm font-medium text-foreground hover:bg-muted/70 transition-colors">
+                  Access Portal
+                </MagneticButton>
+              </Link>
+            </div>
+          </SpotlightCard>
         </div>
       </main>
 
       {/* Fixed bottom footer */}
       <footer className="h-10 shrink-0 border-t border-border/40 px-4 sm:px-8 flex items-center justify-between text-xs text-muted-foreground bg-card/40 backdrop-blur-sm z-20">
-        <span className="font-medium">OrbitPM · 2026</span>
-        <span className="hidden sm:inline">Next.js · Prisma · Better Auth · Vercel</span>
+        <span className="font-medium">Origins Internal Portal · 2026</span>
+        <span className="hidden sm:inline">Authorized Personnel Only</span>
       </footer>
     </div>
   );

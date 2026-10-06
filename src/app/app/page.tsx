@@ -10,12 +10,14 @@ import { formatDate, isOverdue } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const session = await requireSession();
-  const projects = await prisma.project.findMany({
-    where: { status: { not: "ARCHIVED" } },
-    include: { tasks: { select: { id: true, status: true, dueDate: true } } },
-    orderBy: { updatedAt: "desc" },
-    take: 6,
-  });
+  const projects = await prisma.project
+    .findMany({
+      where: { status: { not: "ARCHIVED" } },
+      include: { tasks: { select: { id: true, status: true, dueDate: true } } },
+      orderBy: { updatedAt: "desc" },
+      take: 6,
+    })
+    .catch(() => []);
   const openTasks = projects.reduce(
     (total, project) => total + project.tasks.filter((task) => task.status !== "DONE").length,
     0,
