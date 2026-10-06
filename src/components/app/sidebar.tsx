@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export function Sidebar({ workspaceName, userName }: { workspaceName: string; userName: string }) {
+export function Sidebar({ userName }: { userName: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const items = [
@@ -24,7 +24,6 @@ export function Sidebar({ workspaceName, userName }: { workspaceName: string; us
       <div className="flex h-full flex-col">
         <div className="px-2 py-3">
           <div className="text-sm font-semibold">OrbitPM</div>
-          <div className="mt-1 truncate text-xs text-slate-500">{workspaceName}</div>
         </div>
         <nav className="mt-5 space-y-1">
           {items.map(({ href, label, icon: Icon }) => {
