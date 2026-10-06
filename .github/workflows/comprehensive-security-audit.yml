@@ -1,0 +1,225 @@
+name: Comprehensive Security Audit
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare audit directories
+        run: mkdir -p audit-logs tools
+
+      - name: Install Trivy
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+          trivy --version
+
+      - name: Install CodeQL CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip -o "${RUNNER_TEMP}/codeql.zip"
+          unzip -q "${RUNNER_TEMP}/codeql.zip" -d "${RUNNER_TEMP}/codeql"
+          echo "${RUNNER_TEMP}/codeql/codeql" >> "$GITHUB_PATH"
+          "${RUNNER_TEMP}/codeql/codeql/codeql" version
+
+      - name: Install Semgrep
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check --no-cache-dir semgrep
+          semgrep --version
+
+      - name: Install Gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/gitleaks/gitleaks/master/scripts/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+          gitleaks version
+
+      - name: Install TruffleHog
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+          trufflehog --version
+
+      - name: Install OpenSSF Scorecard
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/ossf/scorecard/releases/latest/download/scorecard_linux_amd64.tar.gz -o "${RUNNER_TEMP}/scorecard.tar.gz"
+          tar -xzf "${RUNNER_TEMP}/scorecard.tar.gz" -C "${RUNNER_TEMP}/bin"
+          chmod +x "${RUNNER_TEMP}/bin/scorecard"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+          scorecard --version
+
+      - name: Install Prowler
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check --no-cache-dir prowler
+          prowler --version
+
+      - name: Install Lynis
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y lynis
+          lynis show version
+
+      - name: Load Cloudflare security-audit-skill
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/cloudflare/security-audit-skill.git "${RUNNER_TEMP}/security-audit-skill"
+          {
+            echo "Cloudflare security-audit-skill:"
+            git -C "${RUNNER_TEMP}/security-audit-skill" rev-parse HEAD
+            echo
+            echo "Skill used as source-first audit guidance; it is an agent skill rather than an executable CLI."
+            sed -n '1,180p' "${RUNNER_TEMP}/security-audit-skill/skills/security-audit/SKILL.md"
+          } > audit-logs/cloudflare-security-audit-skill.txt
+
+      - name: Baseline tool inventory
+        shell: bash
+        run: |
+          {
+            echo "Commit: $(git rev-parse HEAD)"
+            echo "Node: $(node --version)"
+            echo "pnpm: $(pnpm --version)"
+            echo "Trivy: $(trivy --version | head -1)"
+            echo "CodeQL: $(codeql version | head -1)"
+            echo "Semgrep: $(semgrep --version)"
+            echo "Gitleaks: $(gitleaks version)"
+            echo "TruffleHog: $(trufflehog --version | head -1)"
+            echo "Scorecard: $(scorecard --version | head -1)"
+            echo "Prowler: $(prowler --version | head -1)"
+            echo "Lynis: $(lynis show version | head -1)"
+          } | tee audit-logs/tool-versions.txt
+
+      - name: Trivy filesystem scan
+        shell: bash
+        run: |
+          trivy fs .             --scanners vuln,misconfig,secret             --format json             --output audit-logs/trivy.json             --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL             --exit-code 0
+
+      - name: Semgrep SAST scan
+        shell: bash
+        run: |
+          semgrep scan --config auto --json --output audit-logs/semgrep.json . || true
+
+      - name: CodeQL database create and analyze
+        shell: bash
+        run: |
+          codeql database create audit-logs/codeql-db             --language=javascript-typescript             --source-root=.             --build-mode=none             --overwrite
+          codeql database analyze audit-logs/codeql-db             codeql/javascript-queries:codeql-suites/javascript-security-and-quality.qls             --format=sarif-latest             --output=audit-logs/codeql.sarif             --threads=2 || true
+
+      - name: Gitleaks history scan
+        shell: bash
+        run: |
+          gitleaks detect             --source .             --report-format json             --report-path audit-logs/gitleaks.json             --redact             --no-banner || true
+
+      - name: TruffleHog filesystem scan
+        shell: bash
+        run: |
+          trufflehog filesystem .             --json             --no-update > audit-logs/trufflehog.jsonl 2>&1 || true
+
+      - name: OpenSSF Scorecard scan
+        shell: bash
+        env:
+          GITHUB_AUTH_TOKEN: ${{ github.token }}
+        run: |
+          scorecard             --repo=https://github.com/tejaswin-amara/orbitpm             --show-details             --format=json > audit-logs/scorecard.json 2>audit-logs/scorecard.stderr || true
+
+      - name: Prowler contextual cloud scan
+        shell: bash
+        run: |
+          if find . -maxdepth 4 -type f \( -name '*.tf' -o -name 'Dockerfile*' -o -path './k8s/*' -o -path './.aws/*' -o -name 'cloudformation.yml' -o -name 'cloudformation.yaml' -o -name 'pulumi.*' \) | grep -q .; then
+            prowler aws --output-formats json-ocsf --output-directory audit-logs/prowler
+          else
+            printf '%s\n' \
+              'NOT_APPLICABLE: no Terraform, Docker, Kubernetes, AWS, CloudFormation, or Pulumi configuration was found in the repository.' \
+              > audit-logs/prowler.txt
+          fi
+
+      - name: Lynis runner baseline
+        shell: bash
+        run: |
+          lynis audit system --quick --no-colors > audit-logs/lynis.txt 2>&1 || true
+
+      - name: Build application for Lighthouse
+        shell: bash
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
+          BETTER_AUTH_SECRET: audit-only-not-a-production-secret-0123456789
+          BETTER_AUTH_URL: http://127.0.0.1:3000
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+        run: |
+          pnpm build
+
+      - name: Lighthouse local security/performance audit
+        shell: bash
+        run: |
+          nohup pnpm start > audit-logs/next-start.txt 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/ > /dev/null; then break; fi
+            sleep 2
+          done
+          npx --yes lighthouse@latest http://127.0.0.1:3000/             --output=json             --output-path="$(pwd)/audit-logs/lighthouse.json"             --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"             --only-categories=performance,accessibility,best-practices,seo || true
+
+      - name: Summarize discovered audit inputs
+        shell: bash
+        run: |
+          {
+            echo "# Security audit evidence"
+            echo
+            echo "## Repository"
+            git rev-parse HEAD
+            echo
+            echo "## Configuration files"
+            find . -maxdepth 3 -type f \( -name 'vercel.json' -o -name 'next.config.*' -o -name 'package.json' -o -name '*.yml' -o -name '*.yaml' -o -name '.env*' \) | sort
+            echo
+            echo "## Potential secret literals"
+            git grep -n -E '0123456789abcdef|postgres:postgres|BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY|AKIA[0-9A-Z]{16}' -- . ':!pnpm-lock.yaml' || true
+          } > audit-logs/recon-summary.txt
+
+      - name: Upload audit logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbitpm-security-audit-${{ github.sha }}
+          path: audit-logs/
+          if-no-files-found: error
+          retention-days: 14
