@@ -11,4 +11,4 @@ overrides:
   mysql2@<=3.23.0: ^3.23.1
 nodeLinker: hoisted
 ignoreScripts: true
-minimumReleaseAge: 10080
+minimumReleaseAge: 4320
