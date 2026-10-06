@@ -1,7 +1,6 @@
 "use client";
 
 import { Laptop, Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "./theme-provider";
 
@@ -12,39 +11,6 @@ export interface ThemeToggleProps {
 
 export function ThemeToggle({ className, variant = "icon" }: ThemeToggleProps) {
   const { theme, resolvedTheme, toggleTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    if (variant === "pill") {
-      return (
-        <div
-          className={cn(
-            "inline-flex items-center rounded-xl border border-border/60 bg-muted/40 p-1 text-xs",
-            className,
-          )}
-          aria-hidden="true"
-        >
-          <span className="px-2.5 py-1 text-muted-foreground opacity-60">Theme</span>
-        </div>
-      );
-    }
-    return (
-      <button
-        type="button"
-        aria-label="Toggle theme"
-        className={cn(
-          "flex size-8 items-center justify-center rounded-xl border border-border/70 bg-card/60 text-muted-foreground",
-          className,
-        )}
-      >
-        <span className="size-4" />
-      </button>
-    );
-  }
 
   if (variant === "pill") {
     return (
