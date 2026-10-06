@@ -1,0 +1,20 @@
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      run: pnpm biome format --write {staged_files}
+      stage_fixed: true
+    lint:
+      run: pnpm biome check {staged_files}
+    secrets:
+      run: gitleaks protect --staged --redact
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm commitlint --edit {1}
+
+pre-push:
+  commands:
+    validate:
+      run: pnpm typecheck && pnpm test

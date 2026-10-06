@@ -1,0 +1,16 @@
+name: Feature request
+description: Propose a product improvement
+title: "[feat] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true
