@@ -82,8 +82,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m pip install --disable-pip-version-check --no-cache-dir prowler
-          prowler --version
+          if find . -maxdepth 4 -type f \( -name '*.tf' -o -name 'Dockerfile*' -o -path './k8s/*' -o -path './.aws/*' -o -name 'cloudformation.yml' -o -name 'cloudformation.yaml' -o -name 'pulumi.*' \) | grep -q .; then
+            python3 -m pip install --disable-pip-version-check --no-cache-dir prowler
+            prowler --version
+          else
+            echo "Prowler not applicable: no cloud/IaC configuration detected."
+          fi
 
       - name: Install Lynis
         shell: bash
