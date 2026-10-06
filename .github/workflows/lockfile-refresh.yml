@@ -62,7 +62,7 @@ jobs:
         env:
           pnpm_config_ignore_scripts: "false"
         run: |
-          pnpm audit --fix=update
+          pnpm audit --fix
 
       - name: Refresh lockfile after security fix
         run: pnpm install --lockfile-only
@@ -72,13 +72,11 @@ jobs:
         run: |
           pnpm audit --prod
 
-      - name: Remove temporary workspace policy
-        shell: bash
-        run: rm -f pnpm-workspace.yaml
-
-      - name: Upload lockfile
+      - name: Upload dependency remediation
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: generated-pnpm-lock
-          path: pnpm-lock.yaml
+          name: generated-pnpm-security-remediation
+          path: |
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
           if-no-files-found: error
