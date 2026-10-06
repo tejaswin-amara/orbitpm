@@ -78,17 +78,6 @@ jobs:
           echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
           "${RUNNER_TEMP}/bin/trufflehog" --version
 
-      - name: Install OpenSSF Scorecard
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -fsSL https://github.com/ossf/scorecard/releases/download/v5.5.0/scorecard_5.5.0_linux_amd64.tar.gz -o "${RUNNER_TEMP}/scorecard.tar.gz"
-          echo "83b90a05c1540ef1390db1cd5711e5fd04be9c1d8537fb84d39d02092d6a8dff  ${RUNNER_TEMP}/scorecard.tar.gz" | sha256sum -c -
-          tar -xzf "${RUNNER_TEMP}/scorecard.tar.gz" -C "${RUNNER_TEMP}/bin" scorecard
-          chmod +x "${RUNNER_TEMP}/bin/scorecard"
-          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
-          "${RUNNER_TEMP}/bin/scorecard" --version
-
       - name: Install Prowler
         shell: bash
         run: |
@@ -166,11 +155,12 @@ jobs:
           "${RUNNER_TEMP}/bin/trufflehog" filesystem .             --json             --no-update > audit-logs/trufflehog.jsonl 2>&1 || true
 
       - name: OpenSSF Scorecard scan
-        shell: bash
-        env:
-          GITHUB_AUTH_TOKEN: ${{ github.token }}
-        run: |
-          scorecard             --repo=https://github.com/tejaswin-amara/orbitpm             --show-details             --format=json > audit-logs/scorecard.json 2>audit-logs/scorecard.stderr || true
+        uses: ossf/scorecard-action@55891bbd73f2425e97637d96e306fc9d491d0b21
+        with:
+          results_file: audit-logs/scorecard.json
+          results_format: json
+          repo_token: ${{ github.token }}
+          publish_results: false
 
       - name: Prowler contextual cloud scan
         shell: bash
