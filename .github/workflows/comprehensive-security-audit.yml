@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
           echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
-          trivy --version
+          "${RUNNER_TEMP}/bin/trivy" --version
 
       - name: Install CodeQL CLI
         shell: bash
@@ -51,7 +51,7 @@ jobs:
           curl -fsSL https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip -o "${RUNNER_TEMP}/codeql.zip"
           unzip -q "${RUNNER_TEMP}/codeql.zip" -d "${RUNNER_TEMP}/codeql"
           echo "${RUNNER_TEMP}/codeql/codeql" >> "$GITHUB_PATH"
-          "${RUNNER_TEMP}/codeql/codeql/codeql" version
+          "${RUNNER_TEMP}/codeql/codeql" version
 
       - name: Install Semgrep
         shell: bash
@@ -66,7 +66,7 @@ jobs:
           set -euo pipefail
           curl -fsSL https://raw.githubusercontent.com/gitleaks/gitleaks/master/scripts/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
           echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
-          gitleaks version
+          "${RUNNER_TEMP}/bin/gitleaks" version
 
       - name: Install TruffleHog
         shell: bash
@@ -74,7 +74,7 @@ jobs:
           set -euo pipefail
           curl -fsSL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
           echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
-          trufflehog --version
+          "${RUNNER_TEMP}/bin/trufflehog" --version
 
       - name: Install OpenSSF Scorecard
         shell: bash
@@ -84,7 +84,7 @@ jobs:
           tar -xzf "${RUNNER_TEMP}/scorecard.tar.gz" -C "${RUNNER_TEMP}/bin"
           chmod +x "${RUNNER_TEMP}/bin/scorecard"
           echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
-          scorecard --version
+          "${RUNNER_TEMP}/bin/scorecard" --version
 
       - name: Install Prowler
         shell: bash
@@ -121,12 +121,12 @@ jobs:
             echo "Commit: $(git rev-parse HEAD)"
             echo "Node: $(node --version)"
             echo "pnpm: $(pnpm --version)"
-            echo "Trivy: $(trivy --version | head -1)"
+            echo "Trivy: $("${RUNNER_TEMP}/bin/trivy" --version | head -1)"
             echo "CodeQL: $(codeql version | head -1)"
             echo "Semgrep: $(semgrep --version)"
-            echo "Gitleaks: $(gitleaks version)"
-            echo "TruffleHog: $(trufflehog --version | head -1)"
-            echo "Scorecard: $(scorecard --version | head -1)"
+            echo "Gitleaks: $("${RUNNER_TEMP}/bin/gitleaks" version)"
+            echo "TruffleHog: $("${RUNNER_TEMP}/bin/trufflehog" --version | head -1)"
+            echo "Scorecard: $("${RUNNER_TEMP}/bin/scorecard" --version | head -1)"
             echo "Prowler: $(prowler --version | head -1)"
             echo "Lynis: $(lynis show version | head -1)"
           } | tee audit-logs/tool-versions.txt
