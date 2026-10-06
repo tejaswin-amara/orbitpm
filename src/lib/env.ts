@@ -7,7 +7,7 @@ const serverEnvSchema = z.object({
   BETTER_AUTH_URL: z.url(),
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
-  ALLOW_PUBLIC_SIGNUP: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  ALLOW_PUBLIC_SIGNUP: z\n    .enum(["true", "false"])\n    .default("false")\n    .transform((value) => value === "true"),
   ALLOWED_EMAIL_DOMAINS: z.string().default(""),
 });
 
