@@ -1,5 +1,4 @@
-import { MobileNav } from "@/components/app/mobile-nav";
-import { Sidebar } from "@/components/app/sidebar";
+import { AppShell } from "@/components/layout/app-shell";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { requireSession } from "@/lib/session";
 
@@ -8,13 +7,7 @@ export default async function AppLayout({ children }: Readonly<{ children: React
 
   return (
     <QueryProvider>
-      <div className="min-h-screen lg:flex">
-        <Sidebar userName={session.user.name} />
-        <main className="min-w-0 flex-1 p-5 sm:p-7">
-          <MobileNav />
-          {children}
-        </main>
-      </div>
+      <AppShell user={session.user}>{children}</AppShell>
     </QueryProvider>
   );
 }

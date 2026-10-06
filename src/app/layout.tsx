@@ -10,10 +10,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body>{children}</body>
-      <Analytics />
-      <SpeedInsights />
+    <html lang="en" className="dark h-full" suppressHydrationWarning>
+      <body className="spatial-root selection:bg-orbit-indigo/30 selection:text-white">
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
