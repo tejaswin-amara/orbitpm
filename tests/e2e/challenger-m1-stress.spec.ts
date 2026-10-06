@@ -200,6 +200,7 @@ test.describe("Challenger Stress Suite 3: High-Stress Adversarial Scenarios", ()
       // Footer
       const footer = page.locator("footer");
       await expect(footer).toBeVisible();
+      await expect(footer).toBeInViewport();
 
       // Verify footer is within viewport
       const footerBox = await footer.boundingBox();

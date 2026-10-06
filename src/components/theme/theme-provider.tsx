@@ -44,6 +44,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch {
       setThemeState("dark");
       setResolvedTheme("dark");
+    } finally {
+      if (typeof document !== "undefined") {
+        document.documentElement.setAttribute("data-theme-hydrated", "true");
+      }
     }
   }, []);
 

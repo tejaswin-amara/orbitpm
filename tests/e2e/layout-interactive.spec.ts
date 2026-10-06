@@ -237,6 +237,7 @@ test.describe("Challenger Interactive Controls & Layout Shift Stress", () => {
   }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/");
+    await page.locator("html[data-theme-hydrated='true']").waitFor();
 
     // 1. Locate theme toggle on landing page
     const toggleBtn = page.getByTestId("theme-toggle");
@@ -252,35 +253,29 @@ test.describe("Challenger Interactive Controls & Layout Shift Stress", () => {
 
     // 3. Toggle to light mode
     await toggleBtn.click();
-    const isLight = await page.evaluate(
-      () =>
-        document.documentElement.classList.contains("light") &&
-        document.documentElement.getAttribute("data-theme") === "light" &&
-        localStorage.getItem("orbitpm-theme") === "light",
-    );
-    expect(isLight, "Theme must switch to light mode and persist in localStorage").toBe(true);
+    await expect(page.locator("html")).toHaveClass(/light/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await expect
+      .poll(async () => page.evaluate(() => localStorage.getItem("orbitpm-theme")))
+      .toBe("light");
     await assertZeroBodyScroll(page);
 
     // 4. Toggle back to dark mode
     await toggleBtn.click();
-    const isDarkAgain = await page.evaluate(
-      () =>
-        document.documentElement.classList.contains("dark") &&
-        document.documentElement.getAttribute("data-theme") === "dark" &&
-        localStorage.getItem("orbitpm-theme") === "dark",
-    );
-    expect(isDarkAgain, "Theme must toggle back to dark mode").toBe(true);
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect
+      .poll(async () => page.evaluate(() => localStorage.getItem("orbitpm-theme")))
+      .toBe("dark");
     await assertZeroBodyScroll(page);
 
     // 5. Verify theme toggle functions on auth pages as well
     await page.goto("/sign-in");
+    await page.locator("html[data-theme-hydrated='true']").waitFor();
     const authToggleBtn = page.getByTestId("theme-toggle");
     await expect(authToggleBtn).toBeVisible();
     await authToggleBtn.click();
-    const authIsLight = await page.evaluate(() =>
-      document.documentElement.classList.contains("light"),
-    );
-    expect(authIsLight, "Theme must toggle to light mode on auth pages").toBe(true);
+    await expect(page.locator("html")).toHaveClass(/light/);
     await assertZeroBodyScroll(page);
   });
 });

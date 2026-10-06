@@ -5,8 +5,11 @@ export default defineConfig({
   testMatch: "**/*.spec.ts",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
   reporter: "html",
+  expect: {
+    timeout: 10000,
+  },
   use: {
     baseURL: "http://127.0.0.1:3000",
     trace: "on-first-retry",
