@@ -36,10 +36,6 @@ jobs:
       - name: Prepare audit directories
         run: mkdir -p audit-logs tools
 
-      - name: Generate audit-only auth secret
-        shell: bash
-        run: echo "AUDIT_BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
-
       - name: Install Trivy
         shell: bash
         run: |
@@ -55,7 +51,7 @@ jobs:
           curl -fsSL https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip -o "${RUNNER_TEMP}/codeql.zip"
           unzip -q "${RUNNER_TEMP}/codeql.zip" -d "${RUNNER_TEMP}/codeql"
           echo "${RUNNER_TEMP}/codeql/codeql" >> "$GITHUB_PATH"
-          "${RUNNER_TEMP}/codeql/codeql" version
+          "${RUNNER_TEMP}/codeql/codeql/codeql" version
 
       - name: Install Semgrep
         shell: bash
@@ -187,11 +183,11 @@ jobs:
       - name: Build application for Lighthouse
         shell: bash
         env:
-          DATABASE_URL: postgresql://postgres@127.0.0.1:5432/orbitpm
-          BETTER_AUTH_SECRET: ${{ env.AUDIT_BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: http://127.0.0.1:3000
-          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
         run: |
+          export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
+          export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
+          export BETTER_AUTH_URL="http://127.0.0.1:3000"
+          export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
           pnpm build
 
       - name: Lighthouse local security/performance audit
