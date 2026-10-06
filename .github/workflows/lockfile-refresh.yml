@@ -28,6 +28,18 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Normalize existing lockfile
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("pnpm-lock.yaml")
+          text = path.read_text()
+          documents = [part for part in text.split("\n---\n") if part.strip()]
+          if len(documents) > 1:
+              path.write_text("---\n" + documents[-1].lstrip() + "\n")
+          PY
+
       - name: Refresh lockfile
         run: pnpm install --lockfile-only
 
