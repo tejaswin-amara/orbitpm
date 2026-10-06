@@ -3,6 +3,7 @@ import { POST as postComment } from "@/app/api/projects/[projectId]/comments/rou
 import {
   DELETE as deleteProject,
   GET as getProjectDetail,
+  PATCH as patchProject,
 } from "@/app/api/projects/[projectId]/route";
 import {
   GET as getProjectTasks,
@@ -239,10 +240,46 @@ describe("API Route Handlers Unit Tests", () => {
       expect(prisma.project.create).toHaveBeenCalled();
     });
 
+    it("PATCH /api/projects/:id rejects non-owner mutation with 403", async () => {
+      vi.mocked(prisma.project.findFirst).mockResolvedValueOnce({
+        id: "p-owned-by-someone-else",
+        creatorId: "user-other",
+      } as unknown as Awaited<ReturnType<typeof prisma.project.findFirst>>);
+
+      const req = new Request("http://localhost/api/projects/p-owned-by-someone-else", {
+        method: "PATCH",
+        body: JSON.stringify({ status: "ARCHIVED" }),
+      });
+      const res = await patchProject(req, {
+        params: Promise.resolve({ projectId: "p-owned-by-someone-else" }),
+      });
+
+      expect(res.status).toBe(403);
+      expect(prisma.project.update).not.toHaveBeenCalled();
+    });
+
+    it("DELETE /api/projects/:id rejects non-owner mutation with 403", async () => {
+      vi.mocked(prisma.project.findFirst).mockResolvedValueOnce({
+        id: "p-owned-by-someone-else",
+        creatorId: "user-other",
+      } as unknown as Awaited<ReturnType<typeof prisma.project.findFirst>>);
+
+      const req = new Request("http://localhost/api/projects/p-owned-by-someone-else", {
+        method: "DELETE",
+      });
+      const res = await deleteProject(req, {
+        params: Promise.resolve({ projectId: "p-owned-by-someone-else" }),
+      });
+
+      expect(res.status).toBe(403);
+      expect(prisma.project.delete).not.toHaveBeenCalled();
+    });
+
     it("DELETE /api/projects/:id deletes project and returns 204", async () => {
       vi.mocked(prisma.project.findFirst).mockResolvedValueOnce({
         id: "p-del",
         name: "To Delete",
+        creatorId: "user-123",
       } as unknown as Awaited<ReturnType<typeof prisma.project.findFirst>>);
       vi.mocked(prisma.project.delete).mockResolvedValueOnce(
         {} as unknown as Awaited<ReturnType<typeof prisma.project.delete>>,
