@@ -182,7 +182,6 @@ jobs:
 
       - name: Build application for Lighthouse
         shell: bash
-        env:
         run: |
           export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
           export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
