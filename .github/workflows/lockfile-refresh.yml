@@ -40,12 +40,15 @@ jobs:
               path.write_text("---\n" + documents[-1].lstrip() + "\n")
           PY
 
+      - name: Refresh lockfile
+        run: pnpm install --lockfile-only
+
       - name: Apply pnpm security fixes
         shell: bash
         run: |
-          pnpm audit --fix
+          pnpm audit --fix=update
 
-      - name: Refresh lockfile
+      - name: Refresh lockfile after security fix
         run: pnpm install --lockfile-only
 
       - name: Verify production audit
