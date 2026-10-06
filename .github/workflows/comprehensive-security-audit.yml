@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  security-events: read
 
 jobs:
   audit:
@@ -15,17 +14,18 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
         with:
           version: 12.9.1
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
           cache: pnpm
@@ -140,8 +140,18 @@ jobs:
       - name: CodeQL database create and analyze
         shell: bash
         run: |
-          codeql database create audit-logs/codeql-db             --language=javascript-typescript             --source-root=.             --build-mode=none             --overwrite
-          codeql database analyze audit-logs/codeql-db             codeql/javascript-queries:codeql-suites/javascript-security-and-quality.qls             --format=sarif-latest             --output=audit-logs/codeql.sarif             --threads=2 || true
+          set -euo pipefail
+          codeql pack download codeql/javascript-queries
+          codeql database create audit-logs/codeql-db \
+            --language=javascript-typescript \
+            --source-root=. \
+            --build-mode=none \
+            --overwrite
+          codeql database analyze audit-logs/codeql-db \
+            codeql/javascript-queries:codeql-suites/javascript-security-and-quality.qls \
+            --format=sarif-latest \
+            --output=audit-logs/codeql.sarif \
+            --threads=2
 
       - name: Gitleaks history scan
         shell: bash
@@ -156,7 +166,15 @@ jobs:
       - name: TruffleHog filesystem scan
         shell: bash
         run: |
-          "${RUNNER_TEMP}/bin/trufflehog" filesystem .             --json             --no-update > audit-logs/trufflehog.jsonl 2>&1 || true
+          set -euo pipefail
+          mv node_modules "${RUNNER_TEMP}/orbitpm-node_modules"
+          mv audit-logs "${RUNNER_TEMP}/orbitpm-audit-logs"
+          mkdir audit-logs
+          "${RUNNER_TEMP}/bin/trufflehog" filesystem . --json --no-update > "${RUNNER_TEMP}/trufflehog.jsonl" 2>&1 || true
+          mv "${RUNNER_TEMP}/trufflehog.jsonl" audit-logs/trufflehog.jsonl
+          rm -rf node_modules audit-logs
+          mv "${RUNNER_TEMP}/orbitpm-node_modules" node_modules
+          mv "${RUNNER_TEMP}/orbitpm-audit-logs" audit-logs
 
       - name: OpenSSF Scorecard scan
         uses: ossf/scorecard-action@55891bbd73f2425e97637d96e306fc9d491d0b21
@@ -207,6 +225,10 @@ jobs:
       - name: Lighthouse local security/performance audit
         shell: bash
         run: |
+          export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
+          export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
+          export BETTER_AUTH_URL="http://127.0.0.1:3000"
+          export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
           nohup pnpm start > audit-logs/next-start.txt 2>&1 &
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:3000/ > /dev/null; then break; fi
@@ -290,7 +312,14 @@ jobs:
           truffle = root / "trufflehog.jsonl"
           if truffle.exists():
               lines = [x for x in truffle.read_text().splitlines() if x.strip()]
-              out += ["## TruffleHog", f"- findings/events: {len(lines)}", ""]
+              verified = 0
+              for line in lines:
+                  try:
+                      if json.loads(line).get("Verified") is True:
+                          verified += 1
+                  except Exception:
+                      pass
+              out += ["## TruffleHog", f"- findings/events: {len(lines)}", f"- verified findings: {verified}", ""]
           else:
               out += ["## TruffleHog", "- result unavailable", ""]
 
@@ -333,7 +362,7 @@ jobs:
           PY
 
       - name: Upload audit logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: orbitpm-security-audit-${{ github.sha }}
           path: audit-logs/
