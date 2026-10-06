@@ -37,6 +37,7 @@ const SpotlightCard = ({
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: spotlight hover effect
     <div
       ref={divRef}
       onMouseMove={handleMouseMove}
