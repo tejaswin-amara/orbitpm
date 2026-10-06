@@ -36,6 +36,10 @@ jobs:
       - name: Prepare audit directories
         run: mkdir -p audit-logs tools
 
+      - name: Generate audit-only auth secret
+        shell: bash
+        run: echo "AUDIT_BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
       - name: Install Trivy
         shell: bash
         run: |
