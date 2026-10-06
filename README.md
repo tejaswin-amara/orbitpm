@@ -29,7 +29,7 @@ The architecture intentionally starts as a modular monolith. The engineering sta
 ## Core capabilities
 
 - Email/password authentication with Better Auth.
-- Role-based access control for single organization.
+- Role-based access control for single company.
 - Project lifecycle: planning, active, on hold, completed, archived.
 - Task workflow: todo, in progress, review, done.
 - Priorities, due dates, descriptions, and optional assignees.

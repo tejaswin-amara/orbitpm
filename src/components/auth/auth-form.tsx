@@ -42,9 +42,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           {mode === "sign-in" ? "Welcome back" : "Create account"}
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          {mode === "sign-in"
-            ? "Sign in to continue to your projects."
-            : "Start with an account for your organization."}
+          {mode === "sign-in" ? "Sign in to continue to your projects." : ""}
         </p>
       </div>
       <form className="space-y-4" onSubmit={submit}>
