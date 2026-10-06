@@ -134,7 +134,7 @@ jobs:
       - name: Trivy filesystem scan
         shell: bash
         run: |
-          trivy fs .             --scanners vuln,misconfig,secret             --format json             --output audit-logs/trivy.json             --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL             --exit-code 0
+          "${RUNNER_TEMP}/bin/trivy" fs .             --scanners vuln,misconfig,secret             --format json             --output audit-logs/trivy.json             --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL             --exit-code 0
 
       - name: Semgrep SAST scan
         shell: bash
@@ -150,12 +150,12 @@ jobs:
       - name: Gitleaks history scan
         shell: bash
         run: |
-          gitleaks detect             --source .             --report-format json             --report-path audit-logs/gitleaks.json             --redact             --no-banner || true
+          "${RUNNER_TEMP}/bin/gitleaks" detect             --source .             --report-format json             --report-path audit-logs/gitleaks.json             --redact             --no-banner || true
 
       - name: TruffleHog filesystem scan
         shell: bash
         run: |
-          trufflehog filesystem .             --json             --no-update > audit-logs/trufflehog.jsonl 2>&1 || true
+          "${RUNNER_TEMP}/bin/trufflehog" filesystem .             --json             --no-update > audit-logs/trufflehog.jsonl 2>&1 || true
 
       - name: OpenSSF Scorecard scan
         shell: bash
@@ -183,8 +183,8 @@ jobs:
       - name: Build application for Lighthouse
         shell: bash
         env:
-          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
-          BETTER_AUTH_SECRET: audit-only-not-a-production-secret-0123456789
+          DATABASE_URL: postgresql://postgres@127.0.0.1:5432/orbitpm
+          BETTER_AUTH_SECRET: ${{ secrets.AUDIT_BETTER_AUTH_SECRET }}
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
         run: |
