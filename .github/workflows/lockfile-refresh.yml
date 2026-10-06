@@ -43,8 +43,24 @@ jobs:
       - name: Refresh lockfile
         run: pnpm install --lockfile-only
 
+      - name: Allow required build scripts for audit remediation
+        shell: bash
+        run: |
+          cat > pnpm-workspace.yaml <<'EOF'
+          packages:
+            - "."
+          allowBuilds:
+            "@prisma/engines": true
+            "@scarf/scarf": false
+            esbuild: true
+            lefthook: true
+            prisma: true
+          EOF
+
       - name: Apply pnpm security fixes
         shell: bash
+        env:
+          pnpm_config_ignore_scripts: "false"
         run: |
           pnpm audit --fix=update
 
@@ -56,11 +72,13 @@ jobs:
         run: |
           pnpm audit --prod
 
+      - name: Remove temporary workspace policy
+        shell: bash
+        run: rm -f pnpm-workspace.yaml
+
       - name: Upload lockfile
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: generated-pnpm-lock
-          path: |
-            pnpm-lock.yaml
-            pnpm-workspace.yaml
+          path: pnpm-lock.yaml
           if-no-files-found: error
