@@ -60,7 +60,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             />
           </label>
         )}
-        <label htmlFor="name" className="block text-sm font-medium">
+        <label htmlFor="email" className="block text-sm font-medium">
           Email
           <Input
             value={email}
@@ -73,7 +73,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             className="mt-2"
           />
         </label>
-        <label htmlFor="name" className="block text-sm font-medium">
+        <label htmlFor="password" className="block text-sm font-medium">
           Password
           <Input
             value={password}

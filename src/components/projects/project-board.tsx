@@ -144,22 +144,25 @@ export function ProjectBoard({ projectId }: { projectId: string }) {
               Task title
               <Input
                 className="mt-2"
+                id="title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 required
               />
             </label>
-            <label htmlFor="title" className="text-sm font-medium sm:col-span-2">
+            <label htmlFor="task-description" className="text-sm font-medium sm:col-span-2">
               Description
               <Textarea
                 className="mt-2"
+                id="task-description"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
               />
             </label>
-            <label htmlFor="dueDate" className="text-sm font-medium">
+            <label htmlFor="priority" className="text-sm font-medium">
               Priority
               <select
+                id="priority"
                 className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-800 dark:bg-slate-950"
                 value={priority}
                 onChange={(event) => setPriority(event.target.value as Task["priority"])}

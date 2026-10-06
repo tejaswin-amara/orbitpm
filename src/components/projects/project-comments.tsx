@@ -43,6 +43,7 @@ export function ProjectComments({
         <Textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
+          aria-label="Add a comment"
           placeholder="Add context, a decision, or a blocker…"
         />
         <div className="mt-3 flex justify-end">

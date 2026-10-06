@@ -50,7 +50,7 @@ export function CreateProjectForm() {
             maxLength={80}
           />
         </label>
-        <label htmlFor="name" className="text-sm font-medium sm:col-span-2">
+        <label htmlFor="description" className="text-sm font-medium sm:col-span-2">
           Description
           <Textarea
             className="mt-2"
