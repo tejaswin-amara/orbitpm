@@ -64,7 +64,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL https://raw.githubusercontent.com/gitleaks/gitleaks/master/scripts/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
+          asset_url="$(curl -fsSL https://api.github.com/repos/gitleaks/gitleaks/releases/latest | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(a["browser_download_url"] for a in d["assets"] if a["name"].endswith("_linux_x64.tar.gz")))')"
+          curl -fsSL "$asset_url" | tar -xzf - -C "${RUNNER_TEMP}/bin" gitleaks
+          chmod +x "${RUNNER_TEMP}/bin/gitleaks"
           echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
           "${RUNNER_TEMP}/bin/gitleaks" version
 
@@ -152,6 +154,11 @@ jobs:
         run: |
           "${RUNNER_TEMP}/bin/gitleaks" detect             --source .             --report-format json             --report-path audit-logs/gitleaks.json             --redact             --no-banner || true
 
+      - name: Dependency audit
+        shell: bash
+        run: |
+          pnpm audit --prod --audit-level high --json > audit-logs/pnpm-audit.json || true
+
       - name: TruffleHog filesystem scan
         shell: bash
         run: |
@@ -188,6 +195,19 @@ jobs:
           export BETTER_AUTH_URL="http://127.0.0.1:3000"
           export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
           pnpm build
+
+      - name: OWASP ZAP baseline scan
+        shell: bash
+        run: |
+          docker run --rm --network host \
+            -v "$(pwd)/audit-logs:/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://127.0.0.1:3000/ -J zap.json -r zap.html || true
+
+      - name: Generate SBOM
+        shell: bash
+        run: |
+          "${RUNNER_TEMP}/bin/trivy" fs . --format cyclonedx --output audit-logs/sbom.cdx.json --scanners vuln
 
       - name: Lighthouse local security/performance audit
         shell: bash
