@@ -27,7 +27,7 @@ export const auth = betterAuth({
   trustedOrigins: [...trustedOrigins],
   user: {
     validateUserInfo: async ({ user, source }) => {
-      if (source.action === "create-user" && !isSignupAllowed(user.email)) {
+      if (source.action === "create-user" && !isSignupAllowed(user.email ?? "")) {
         return {
           error: "signup_disabled",
           errorDescription: "Account creation is restricted.",
