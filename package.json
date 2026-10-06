@@ -28,8 +28,11 @@
     "db:seed": "prisma db seed",
     "auth:check": "auth check schema --config ./src/lib/auth.ts",
     "validate": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm api:lint && pnpm build",
-    "prepare": "echo skip lefthook",
-    "postinstall": "prisma generate"
+    "prepare": "lefthook install",
+    "postinstall": "prisma generate",
+    "audit:deps": "pnpm audit --prod --audit-level high",
+    "test:coverage": "vitest run --coverage",
+    "security:scan": "pnpm audit:deps"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
