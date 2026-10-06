@@ -4,7 +4,7 @@
 **Pull Request:** #16 — security: comprehensive audit and remediation  
 **Audit branch:** security/comprehensive-audit-20261006  
 **Audit date:** 2026-10-06  
-**Current remediation commit:** 5a64312aae53b661c796c3719bf5506385cd4a7d
+**Dependency remediation commit:** 5a64312aae53b661c796c3719bf5506385cd4a7d
 
 ## Executive summary
 
@@ -18,7 +18,7 @@ The audit identified and remediated:
 - Missing baseline security response headers.
 - Transitive dependency vulnerabilities in `deepmerge-ts`, `mysql2`, and `source-map-js`.
 - CI supply-chain weaknesses from mutable GitHub Action references and excessive workflow permissions.
-- Missing minimum-release-age policy in the dependency pipeline.
+- Missing minimum-release-age policy (3 days) in the dependency pipeline.
 - Missing dedicated CodeQL workflow.
 - Secret-scanning false-positive amplification caused by scanning generated dependencies and persisted checkout credentials.
 - Inconsistent agent/developer governance and incomplete security documentation.
@@ -38,10 +38,10 @@ The repository now has a centralized pnpm 12 security policy in `pnpm-workspace.
 | ORB-SEC-006 | High | GHSA-3f6p-5ww8-9rcr | `mysql2` authentication downgrade vulnerability. | Override to `>=3.23.1`; production dependency audit now passes. |
 | ORB-SEC-007 | Medium | GHSA-rgwj-5xj2-c3m3 | `mysql2` zlib resource exhaustion exposure. | Same `mysql2 >=3.23.1` override. |
 | ORB-SEC-008 | High | CVE-2026-93749 / GHSA-68fv-2mgg-jv7q | `source-map-js` vulnerable release. | Lockfile remediation moved the graph to `1.2.2`; production audit passes. |
-| ORB-SEC-009 | Medium | supply-chain | Semgrep identified missing dependency release-age controls. | Added npm/pnpm release-age policy and Renovate minimum release age. |
+| ORB-SEC-009 | Medium | supply-chain | Semgrep identified missing dependency release-age controls. | Added npm/pnpm release-age policy and Renovate minimum release age (3 days). |
 | ORB-SEC-010 | Medium | supply-chain | CI workflows used mutable action tags and broader permissions than required. | Pinned security-sensitive Actions to immutable SHAs and narrowed job permissions. |
 | ORB-SEC-011 | High | secret exposure | Gitleaks identified two historical CI credential/fallback values. | Current tree no longer contains them. Git history was not rewritten because the requested destructive history rewrite condition was not explicitly invoked. Rotate any value if it was ever real. |
-| ORB-SEC-012 | High, residual | CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm | `braces@3.0.3` remains through `@stoplight/spectral-cli -> fast-glob -> micromatch -> braces`. | No patched `braces` release exists in the advisory at audit time. The dependency is dev-only and not in the production graph. Monitor upstream; do not replace it with an unreviewed Git dependency. |
+| ORB-SEC-012 | High, residual | CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm | `braces@3.0.3` remains through `@stoplight/spectral-cli -> fast-glob -> micromatch -> braces`. | No patched `braces` release exists in the advisory at audit time; the finding remains confined to the development-only Spectral toolchain. The dependency is dev-only and not in the production graph. Monitor upstream; do not replace it with an unreviewed Git dependency. |
 
 ## Initial scanner evidence
 
@@ -193,7 +193,7 @@ The current tree has no deterministic production authentication/database default
 
 ## Residual risk
 
-The only confirmed dependency finding that could not be eliminated is `braces@3.0.3` in the development-only Spectral dependency chain. The current GitHub Advisory Database lists affected versions through 3.0.3 and currently reports no patched release. The risk is limited to the dev/API-lint toolchain and is not present in the production dependency graph. citeturn887797search0
+The only confirmed dependency finding that could not be eliminated is `braces@3.0.3` in the development-only Spectral dependency chain. The current GitHub Advisory Database lists affected versions through 3.0.3 and currently reports no patched release. The risk is limited to the dev/API-lint toolchain and is not present in the production dependency graph. https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
 
 Do not replace this package with an unreviewed Git commit merely to make scanners green. Prefer an upstream patched release or a maintained parent-package update when available.
 
