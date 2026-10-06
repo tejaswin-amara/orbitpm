@@ -3,24 +3,45 @@ info:
   title: OrbitPM API
   version: 0.1.0
   description: JSON API for OrbitPM project management.
+  contact:
+    name: OrbitPM Support
+    url: https://github.com/tejaswin-amara/orbitpm
+tags:
+  - name: System
+    description: System health and operational endpoints
+  - name: Projects
+    description: Project management operations
+  - name: Tasks
+    description: Task tracking and status operations
+  - name: Comments
+    description: Discussions and project comment operations
 servers:
   - url: https://example.vercel.app
 paths:
   /api/health:
     get:
       summary: Health check
+      description: Check the database and system health status.
+      operationId: getHealthStatus
+      tags: [System]
       responses:
         "200": { description: Healthy }
         "503": { description: Degraded }
   /api/projects:
     get:
       summary: List projects
+      description: Retrieve list of projects available to the authenticated user.
+      operationId: listProjects
+      tags: [Projects]
       security: [{ cookieAuth: [] }]
       responses:
         "200": { description: Project list }
         "401": { description: Unauthorized }
     post:
       summary: Create project
+      description: Create a new project.
+      operationId: createProject
+      tags: [Projects]
       security: [{ cookieAuth: [] }]
       requestBody:
         required: true
@@ -35,12 +56,18 @@ paths:
     parameters: [{ $ref: "#/components/parameters/projectId" }]
     get:
       summary: Get project
+      description: Retrieve details of a specific project.
+      operationId: getProjectById
+      tags: [Projects]
       security: [{ cookieAuth: [] }]
       responses:
         "200": { description: Project }
         "404": { description: Not found }
     patch:
       summary: Update project
+      description: Update properties of an existing project.
+      operationId: updateProjectById
+      tags: [Projects]
       security: [{ cookieAuth: [] }]
       requestBody:
         required: true
@@ -55,10 +82,16 @@ paths:
     parameters: [{ $ref: "#/components/parameters/projectId" }]
     get:
       summary: List project tasks
+      description: Retrieve all tasks associated with a given project.
+      operationId: listProjectTasks
+      tags: [Tasks]
       security: [{ cookieAuth: [] }]
       responses: { "200": { description: Task list } }
     post:
       summary: Create task
+      description: Create a new task within a specific project.
+      operationId: createTaskInProject
+      tags: [Tasks]
       security: [{ cookieAuth: [] }]
       requestBody:
         required: true
@@ -72,6 +105,9 @@ paths:
     parameters: [{ $ref: "#/components/parameters/taskId" }]
     patch:
       summary: Update task
+      description: Update status, priority, or fields of an existing task.
+      operationId: updateTaskById
+      tags: [Tasks]
       security: [{ cookieAuth: [] }]
       requestBody:
         required: true
@@ -81,12 +117,18 @@ paths:
       responses: { "200": { description: Updated } }
     delete:
       summary: Delete task
+      description: Remove a task by its identifier.
+      operationId: deleteTaskById
+      tags: [Tasks]
       security: [{ cookieAuth: [] }]
       responses: { "204": { description: Deleted } }
   /api/projects/{projectId}/comments:
     parameters: [{ $ref: "#/components/parameters/projectId" }]
     post:
       summary: Add project comment
+      description: Post a comment on a project.
+      operationId: createProjectComment
+      tags: [Comments]
       security: [{ cookieAuth: [] }]
       requestBody:
         required: true
