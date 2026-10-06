@@ -188,7 +188,7 @@ jobs:
         shell: bash
         env:
           DATABASE_URL: postgresql://postgres@127.0.0.1:5432/orbitpm
-          BETTER_AUTH_SECRET: ${{ secrets.AUDIT_BETTER_AUTH_SECRET }}
+          BETTER_AUTH_SECRET: ${{ env.AUDIT_BETTER_AUTH_SECRET }}
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
         run: |
