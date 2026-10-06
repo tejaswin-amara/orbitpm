@@ -8,6 +8,21 @@ const tones = {
   green: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300",
 };
 
-export function Badge({ tone = "slate", children }: { tone?: keyof typeof tones; children: React.ReactNode }) {
-  return <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium", tones[tone])}>{children}</span>;
+export function Badge({
+  tone = "slate",
+  children,
+}: {
+  tone?: keyof typeof tones;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+        tones[tone],
+      )}
+    >
+      {children}
+    </span>
+  );
 }

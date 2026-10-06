@@ -1,6 +1,6 @@
 # OrbitPM
 
-A Vercel-native project management application for teams that need projects, tasks, Kanban workflow, comments, activity history, and lightweight operational visibility without maintaining a separate backend server.
+A Vercel-native project management application built for internal company use that need projects, tasks, Kanban workflow, comments, activity history, and lightweight operational visibility without maintaining a separate backend server.
 
 ## Architecture
 
@@ -29,7 +29,7 @@ The architecture intentionally starts as a modular monolith. The engineering sta
 ## Core capabilities
 
 - Email/password authentication with Better Auth.
-- Per-user workspace membership and role-aware access.
+- Role-based access control for single organization.
 - Project lifecycle: planning, active, on hold, completed, archived.
 - Task workflow: todo, in progress, review, done.
 - Priorities, due dates, descriptions, and optional assignees.

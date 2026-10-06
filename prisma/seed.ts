@@ -1,5 +1,5 @@
-import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../src/generated/prisma/client";
 import "dotenv/config";
 
 const connectionString = process.env.DATABASE_URL ?? "";
@@ -19,23 +19,10 @@ async function main(): Promise<void> {
     return;
   }
 
-  const workspace = await prisma.workspace.upsert({
-    where: { slug: `seed-${user.id.slice(0, 8)}` },
-    update: {},
-    create: { name: "OrbitPM Demo", slug: `seed-${user.id.slice(0, 8)}` },
-  });
-
-  await prisma.membership.upsert({
-    where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } },
-    update: { role: "OWNER" },
-    create: { workspaceId: workspace.id, userId: user.id, role: "OWNER" },
-  });
-
   const project = await prisma.project.upsert({
-    where: { workspaceId_slug: { workspaceId: workspace.id, slug: "website-relaunch" } },
+    where: { slug: "website-relaunch" },
     update: {},
     create: {
-      workspaceId: workspace.id,
       creatorId: user.id,
       name: "Website Relaunch",
       slug: "website-relaunch",

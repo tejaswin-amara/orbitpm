@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const projectStatusSchema = z.enum(["PLANNING", "ACTIVE", "ON_HOLD", "COMPLETED", "ARCHIVED"]);
+export const projectStatusSchema = z.enum([
+  "PLANNING",
+  "ACTIVE",
+  "ON_HOLD",
+  "COMPLETED",
+  "ARCHIVED",
+]);
 export const taskStatusSchema = z.enum(["TODO", "IN_PROGRESS", "REVIEW", "DONE"]);
 export const taskPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
