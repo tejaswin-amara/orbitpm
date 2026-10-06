@@ -37,17 +37,16 @@ const SpotlightCard = ({
   };
 
   return (
-    <section
+    <div
       ref={divRef}
       onMouseMove={handleMouseMove}
       onFocus={handleFocus}
       onBlur={handleBlur}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      aria-label="Spotlight Card"
       className={`relative rounded-3xl border border-neutral-800 bg-neutral-900 overflow-hidden p-8 ${className}`}
     >
-      <section
+      <div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
         style={{
           opacity,
@@ -55,7 +54,7 @@ const SpotlightCard = ({
         }}
       />
       {children}
-    </section>
+    </div>
   );
 };
 
