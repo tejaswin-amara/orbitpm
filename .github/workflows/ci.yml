@@ -30,15 +30,13 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test -- --coverage
       - run: pnpm api:lint
-      - name: Generate CI-only auth secret
-        shell: bash
-        run: echo "CI_BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
-      - run: pnpm build
-        env:
-          DATABASE_URL: postgresql://postgres@127.0.0.1:5432/orbitpm
-          BETTER_AUTH_SECRET: ${{ env.CI_BETTER_AUTH_SECRET }}
-          BETTER_AUTH_URL: http://127.0.0.1:3000
-          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+      - name: Build application
+        run: |
+          export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
+          export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
+          export BETTER_AUTH_URL="http://127.0.0.1:3000"
+          export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
+          pnpm build
 
   security:
     runs-on: ubuntu-latest
