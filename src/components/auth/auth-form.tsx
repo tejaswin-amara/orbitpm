@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -148,9 +149,17 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       <div className="mb-8">
         <Link
           href="/"
-          className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-2.5 text-sm font-bold tracking-wider uppercase text-foreground hover:opacity-85 transition-opacity"
         >
-          OrbitPM
+          <Image
+            src="/origins-logo.png"
+            alt="Origins Logo"
+            width={28}
+            height={28}
+            priority
+            className="dark:invert size-7 object-contain"
+          />
+          <span>Origins</span>
         </Link>
         <h1 className="mt-5 text-3xl font-semibold tracking-tight text-foreground">
           {mode === "sign-in" ? "Welcome back" : "Create account"}

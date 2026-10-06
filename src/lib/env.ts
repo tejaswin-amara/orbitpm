@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 
 const serverEnvSchema = z.object({
-  DATABASE_URL: z.string().min(1).default("postgresql://postgres:postgres@localhost:5432/orbitpm"),
+  DATABASE_URL: z.string().min(1).default("postgresql://postgres:postgres@127.0.0.1:5432/orbitpm"),
   BETTER_AUTH_SECRET: z.string().min(32).default("0123456789abcdef0123456789abcdef"),
   BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
   GITHUB_CLIENT_ID: z.string().optional(),

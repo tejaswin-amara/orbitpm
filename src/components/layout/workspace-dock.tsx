@@ -1,6 +1,7 @@
 "use client";
 
 import { FolderKanban, LayoutDashboard, Menu, Plus, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -68,10 +69,17 @@ export function WorkspaceDock({
           </button>
 
           <Link href="/app" className="group flex items-center gap-2.5">
-            <div className="relative flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 shadow-sm shadow-indigo-500/20">
-              <span className="size-2 rounded-full bg-white ring-2 ring-white/50 group-hover:scale-110 transition-transform" />
-            </div>
-            <span className="text-sm font-semibold tracking-tight text-foreground">OrbitPM</span>
+            <Image
+              src="/origins-logo.png"
+              alt="Origins Logo"
+              width={24}
+              height={24}
+              priority
+              className="dark:invert size-6 object-contain"
+            />
+            <span className="text-sm font-bold tracking-wider uppercase text-foreground">
+              Origins
+            </span>
           </Link>
 
           <span className="hidden text-muted-foreground/40 sm:inline">/</span>

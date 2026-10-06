@@ -1,6 +1,7 @@
 "use client";
 
 import { FolderKanban, LayoutDashboard, LogOut, Sparkles, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -80,10 +81,14 @@ export function MobileSheet({
       >
         <div className="flex items-center justify-between pb-4 border-b border-border/60">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 shadow-sm">
-              <span className="size-2 rounded-full bg-white" />
-            </div>
-            <span className="font-semibold text-sm">OrbitPM</span>
+            <Image
+              src="/origins-logo.png"
+              alt="Origins Logo"
+              width={24}
+              height={24}
+              className="dark:invert size-6 object-contain"
+            />
+            <span className="font-bold text-sm tracking-wider uppercase">Origins</span>
           </div>
           <button
             type="button"

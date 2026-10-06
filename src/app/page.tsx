@@ -25,20 +25,12 @@ export default function HomePage() {
             className="flex items-center gap-2.5 text-base font-bold tracking-wider text-foreground uppercase"
           >
             <Image
-              src="/origins-logo-dark.webp"
+              src="/origins-logo.png"
               alt="Origins Logo"
               width={28}
               height={28}
               priority
-              className="hidden dark:block size-7 object-contain"
-            />
-            <Image
-              src="/origins-logo-light.png"
-              alt="Origins Logo"
-              width={28}
-              height={28}
-              priority
-              className="block dark:hidden size-7 object-contain"
+              className="dark:invert size-7 object-contain"
             />
             <span>Origins</span>
           </Link>
@@ -76,20 +68,12 @@ export default function HomePage() {
             {/* Company Logo Display */}
             <div className="mb-6 flex justify-center items-center">
               <Image
-                src="/origins-logo-dark.webp"
+                src="/origins-logo.png"
                 alt="Origins - Rise • Conquer • Evolve"
-                width={160}
-                height={200}
+                width={220}
+                height={220}
                 priority
-                className="hidden dark:block h-28 sm:h-36 w-auto object-contain drop-shadow-xl"
-              />
-              <Image
-                src="/origins-logo-light.png"
-                alt="Origins - Rise • Conquer • Evolve"
-                width={200}
-                height={200}
-                priority
-                className="block dark:hidden h-28 sm:h-36 w-auto object-contain drop-shadow-md"
+                className="dark:invert h-32 sm:h-40 w-auto object-contain drop-shadow-xl transition-all"
               />
             </div>
 

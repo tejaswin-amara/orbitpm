@@ -75,7 +75,7 @@ describe("WorkspaceDock Component & Interactions", () => {
       }),
     );
 
-    expect(screen.getByText("OrbitPM")).toBeInTheDocument();
+    expect(screen.getByText(/OrbitPM|Origins/i)).toBeInTheDocument();
     expect(screen.getByText("Overview")).toBeInTheDocument();
     expect(screen.getByText("Projects")).toBeInTheDocument();
     expect(screen.getByLabelText(/Ask Orbit or search tasks/i)).toBeInTheDocument();

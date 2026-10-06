@@ -136,13 +136,13 @@ test.describe("Challenger Interactive Controls & Layout Shift Stress", () => {
     }
 
     // 2. Desktop Viewport: Verify WorkspaceDock elements
-    const dock = page.locator("header");
+    const dock = page.locator("header").first();
     await expect(dock).toBeVisible();
 
     // Verify brand, navigation, assistant trigger
-    await expect(page.getByText("OrbitPM")).toBeVisible();
-    await expect(page.getByText("Overview")).toBeVisible();
-    await expect(page.getByText("Projects")).toBeVisible();
+    await expect(dock.getByText(/OrbitPM|Origins/i).first()).toBeVisible();
+    await expect(dock.getByText("Overview")).toBeVisible();
+    await expect(dock.getByRole("link", { name: "Projects", exact: true })).toBeVisible();
 
     const assistantBtn = page.getByLabel(/Ask Orbit or search tasks/i);
     await expect(assistantBtn).toBeVisible();
