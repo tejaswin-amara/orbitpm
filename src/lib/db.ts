@@ -1,8 +1,8 @@
 import "server-only";
-import { attachDatabasePool } from "@vercel/functions";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@/generated/prisma/client";
+import { attachDatabasePool } from "@vercel/functions";
 import { Pool } from "pg";
+import { PrismaClient } from "@/generated/prisma/client";
 import { env } from "@/lib/env";
 
 const globalForDb = globalThis as unknown as {

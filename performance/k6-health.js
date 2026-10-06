@@ -1,5 +1,5 @@
-import http from "k6/http";
 import { check, sleep } from "k6";
+import http from "k6/http";
 
 export const options = {
   thresholds: { http_req_duration: ["p(95)<500"], checks: ["rate>0.99"] },

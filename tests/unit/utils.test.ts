@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isOverdue } from "@/lib/utils";
 import { uniqueSlug } from "@/lib/slug";
+import { isOverdue } from "@/lib/utils";
 
 describe("date helpers", () => {
   it("detects overdue work", () => {

@@ -1,17 +1,15 @@
-import { QueryProvider } from "@/components/providers/query-provider";
-import { Sidebar } from "@/components/app/sidebar";
 import { MobileNav } from "@/components/app/mobile-nav";
-import { ensureWorkspaceForUser } from "@/lib/workspaces";
+import { Sidebar } from "@/components/app/sidebar";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { requireSession } from "@/lib/session";
 
 export default async function AppLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const session = await requireSession();
-  const workspace = await ensureWorkspaceForUser(session.user.id);
 
   return (
     <QueryProvider>
       <div className="min-h-screen lg:flex">
-        <Sidebar workspaceName={workspace.name} userName={session.user.name} />
+        <Sidebar workspaceName="OrbitPM" userName={session.user.name} />
         <main className="min-w-0 flex-1 p-5 sm:p-7">
           <MobileNav />
           {children}

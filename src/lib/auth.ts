@@ -1,8 +1,8 @@
 import "server-only";
 import { betterAuth } from "better-auth";
 import { toNextJsHandler } from "better-auth/next-js";
-import { env } from "@/lib/env";
 import { dbPool } from "@/lib/db";
+import { env } from "@/lib/env";
 
 export const auth = betterAuth({
   database: dbPool,
