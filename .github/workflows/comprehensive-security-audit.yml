@@ -34,6 +34,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Prepare audit directories
+      - name: Regenerate security lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --lockfile-only --ignore-scripts
+          cp pnpm-lock.yaml audit-logs/generated-pnpm-lock.yaml
+
         run: mkdir -p audit-logs tools
 
       - name: OpenSSF Scorecard scan
