@@ -1,17 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "minimumReleaseAge": "1 day",
+  "minimumReleaseAge": "7 days",
   "packageRules": [
     {
       "groupName": "typescript tooling",
       "matchPackageNames": ["typescript", "biome", "vitest"],
-      "minimumReleaseAge": "1 day"
+      "minimumReleaseAge": "7 days"
     },
     {
       "groupName": "next ecosystem",
       "matchPackageNames": ["next", "react", "react-dom"],
-      "minimumReleaseAge": "1 day"
+      "minimumReleaseAge": "7 days"
     }
   ]
 }
