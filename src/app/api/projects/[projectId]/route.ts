@@ -60,7 +60,7 @@ export async function DELETE(
   const { projectId } = await context.params;
   const access = await canManageProject(projectId, session.user.id);
   if (!access) return jsonError("Project not found", 404);
-  if (access === false) return jsonError("Forbidden", 403);
+  if (access === "FORBIDDEN") return jsonError("Forbidden", 403);
 
   await prisma.project.delete({ where: { id: projectId } });
   return new Response(null, { status: 204 });
