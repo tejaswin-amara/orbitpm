@@ -1,202 +1,240 @@
 # OrbitPM Security Audit Results
 
 **Repository:** tejaswin-amara/orbitpm  
-**Pull Request:** #16 — security: comprehensive audit and remediation  
-**Audit branch:** security/comprehensive-audit-20261006  
-**Audit date:** 2026-10-06  
-**Dependency remediation commit:** 5a64312aae53b661c796c3719bf5506385cd4a7d
+**PR:** #16 — `security: comprehensive audit and remediation`  
+**Audit branch:** `security/comprehensive-audit-20261006`  
+**Latest remediation head:** `ca93ad72ff67cb77bb657d6ee90597f77ab31dd0`
 
-## Executive summary
+## Scope and engineering baseline
 
-OrbitPM was audited as a Next.js 16 / React / TypeScript / Prisma / PostgreSQL / Better Auth application with a Vercel deployment model.
+OrbitPM is governed by the uploaded Awesome Dev Pipeline as the default engineering operating model, with deviations recorded in ADRs/PRs. fileciteturn164file0L5-L8
 
-The audit identified and remediated:
+The implementation also follows:
 
-- Broken server-side authorization on project lifecycle mutations.
-- Deterministic authentication and database credential fallbacks.
-- Production trust of local development origins.
-- Missing baseline security response headers.
-- Transitive dependency vulnerabilities in `deepmerge-ts`, `mysql2`, and `source-map-js`.
-- CI supply-chain weaknesses from mutable GitHub Action references and excessive workflow permissions.
-- Missing minimum-release-age policy (3 days) in the dependency pipeline.
-- Missing dedicated CodeQL workflow.
-- Secret-scanning false-positive amplification caused by scanning generated dependencies and persisted checkout credentials.
-- Inconsistent agent/developer governance and incomplete security documentation.
-- Temporary committed local database/build artifacts.
+- **Ponytail:** inspect first, YAGNI, root-cause fixes, reuse before abstraction, minimal dependencies, and no simplification of security or validation.
+- **Awesome Claude Code:** progressive agent context, repository-local review commands, explicit validation ladders, and agent governance.
+- **Public APIs:** discovery catalog only; external providers remain optional server-side adapters and do not become a core runtime dependency.
 
-The repository now has a centralized pnpm 12 security policy in `pnpm-workspace.yaml`, including explicit build approvals, release-age controls, and audited transitive overrides.
+## Baseline audit evidence
 
-## Confirmed findings
+The successful baseline comprehensive audit run was GitHub Actions run **37504766666**.
 
-| ID | Severity | CWE / advisory | Finding | Remediation |
-|---|---|---|---|---|
-| ORB-SEC-001 | High | CWE-862 / CWE-639 | Project PATCH/DELETE endpoints authenticated the caller but did not authorize the caller against project ownership. | Added server-side creator checks with HTTP 403 responses and regression tests. |
-| ORB-SEC-002 | High | CWE-798 / secret management | `BETTER_AUTH_SECRET` and PostgreSQL defaults were deterministic and embedded in application defaults/CI. | Removed production defaults; CI now uses ephemeral process-local secrets; environment validation is mandatory. |
-| ORB-SEC-003 | High | CWE-346 | Local development origins were always trusted by Better Auth configuration. | Localhost/127.0.0.1 are trusted only outside production. |
-| ORB-SEC-004 | Medium | CWE-693 | Baseline browser security headers were incomplete. | Added nosniff, frame denial, referrer, permissions, and production HSTS headers. |
-| ORB-SEC-005 | High | CVE-2026-40345 | `deepmerge-ts` vulnerable release in the dependency graph. | pnpm override to `>=8.0.0`; production dependency audit now passes. |
-| ORB-SEC-006 | High | GHSA-3f6p-5ww8-9rcr | `mysql2` authentication downgrade vulnerability. | Override to `>=3.23.1`; production dependency audit now passes. |
-| ORB-SEC-007 | Medium | GHSA-rgwj-5xj2-c3m3 | `mysql2` zlib resource exhaustion exposure. | Same `mysql2 >=3.23.1` override. |
-| ORB-SEC-008 | High | CVE-2026-93749 / GHSA-68fv-2mgg-jv7q | `source-map-js` vulnerable release. | Lockfile remediation moved the graph to `1.2.2`; production audit passes. |
-| ORB-SEC-009 | Medium | supply-chain | Semgrep identified missing dependency release-age controls. | Added npm/pnpm release-age policy and Renovate minimum release age (3 days). |
-| ORB-SEC-010 | Medium | supply-chain | CI workflows used mutable action tags and broader permissions than required. | Pinned security-sensitive Actions to immutable SHAs and narrowed job permissions. |
-| ORB-SEC-011 | High | secret exposure | Gitleaks identified two historical CI credential/fallback values. | Current tree no longer contains them. Git history was not rewritten because the requested destructive history rewrite condition was not explicitly invoked. Rotate any value if it was ever real. |
-| ORB-SEC-012 | High, residual | CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm | `braces@3.0.3` remains through `@stoplight/spectral-cli -> fast-glob -> micromatch -> braces`. | No patched `braces` release exists in the advisory at audit time; the finding remains confined to the development-only Spectral toolchain. The dependency is dev-only and not in the production graph. Monitor upstream; do not replace it with an unreviewed Git dependency. |
+| Tool | Baseline result |
+| --- | --- |
+| Trivy | 0 vulnerability findings |
+| Semgrep | 5 MEDIUM supply-chain/configuration findings |
+| CodeQL | 0 findings |
+| Gitleaks | 2 historical secret findings |
+| pnpm audit | 0 production dependency vulnerabilities |
+| OpenSSF Scorecard | 7.8 / 11 checks |
+| Prowler | Not applicable; no cloud/IaC repository configuration |
+| Lynis | Audit-runner baseline collected |
+| Lighthouse | Performance 0.62, Accessibility 1.00, Best Practices 0.96, SEO 1.00 |
+| SBOM | 463 components |
 
-## Initial scanner evidence
+Baseline tool versions included Trivy 0.75.0, CodeQL 2.27.1, Semgrep 1.179.0, Gitleaks 8.30.1, TruffleHog 3.98.1, Node 22.23.3 and pnpm 12.9.1.
 
-### Trivy
+## Confirmed findings and fixes
 
-Initial filesystem/SCA scan reported 4 vulnerability findings:
+### ORB-SEC-001 — High — Broken project authorization
 
-- 3 High
-- 1 Medium
+Project lifecycle mutation endpoints authenticated users but did not enforce project ownership/administrator authorization.
 
-The findings were the vulnerable `deepmerge-ts`, `mysql2`, and `source-map-js` versions described above.
+**Fix**
+- Added `src/lib/authz.ts` as the shared server-side authorization guard.
+- Project creators may manage their projects.
+- `ADMIN` users may manage projects created by another user.
+- Other authenticated users receive HTTP 403.
+- Regression tests cover owner, non-owner and admin cases.
+- The Prisma `User.role` model and migration make the authorization policy explicit.
 
-The remediation lockfile was generated with pnpm's native audit fixer and then verified with `pnpm audit --prod` successfully.
+### ORB-SEC-002 — High — Deterministic authentication/database defaults
 
-### Semgrep
+Production configuration had deterministic fallback values for the PostgreSQL connection and Better Auth secret.
 
-Initial scan reported 3 Medium supply-chain configuration findings:
+**Fix**
+- Removed production defaults from `src/lib/env.ts`.
+- Required runtime configuration is validated with Zod.
+- CI uses process-local ephemeral secrets.
+- `.env.example` contains placeholders only.
 
-- Missing minimum-release-age policy in npm configuration.
-- Missing release-age policy in two Renovate package groups.
+### ORB-SEC-003 — High — Development-origin trust in production
 
-These were addressed with the repository pnpm policy and Renovate configuration.
+Localhost origins were trusted unconditionally by Better Auth.
 
-### CodeQL
+**Fix**
+- `localhost` and `127.0.0.1` are trusted only outside production.
+- Production trusted origins come from the configured Better Auth URL.
 
-The first comprehensive-audit implementation generated an empty/missing SARIF artifact despite the CLI completing. The workflow was corrected to explicitly download the JavaScript/TypeScript query pack and fail when analysis cannot produce SARIF.
+### ORB-SEC-004 — Medium — Browser security headers
 
-A dedicated pinned CodeQL GitHub Actions workflow was also added for recurring pull-request/main analysis.
+**Fix**
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- strict referrer policy
+- restrictive permissions policy
+- production HSTS
+- framework power-header disabled
 
-### Gitleaks
+### ORB-SEC-005 — High — Historical hardcoded secret material
 
-Two historical findings were reported in previous versions of `.github/workflows/ci.yml`.
+Gitleaks identified two historical CI fallback/secret patterns.
 
-The current source no longer contains deterministic test credential fallbacks. The repository history was deliberately not rewritten because that is destructive and the audit request only called for history rewriting when explicitly instructed.
+**Fix**
+- Current source no longer contains deterministic credential fallbacks.
+- CI uses environment variables or process-local secrets.
+- `.gitleaks.toml` only allowlists GitHub Actions secret *references*, not secret values.
 
-### TruffleHog
+**Residual**
+The Git history was not rewritten. A destructive history rewrite should only be performed as a separate coordinated operation after real credential rotation/revocation.
 
-The initial filesystem scan produced 88 events, but none were verified secrets. Many events originated from generated dependency content and GitHub Actions checkout metadata.
+### ORB-SEC-006 — Medium — Supply-chain policy gaps
 
-The scanner was corrected to isolate `node_modules` and generated audit output and the checkout now disables persisted Git credentials.
+Semgrep identified missing dependency release-age, exotic-subdependency and trust-policy controls.
 
-### OpenSSF Scorecard
+**Fix**
+`pnpm-workspace.yaml` now enforces:
 
-The initial Scorecard result was **6.6/10 across 11 checks**.
+```yaml
+ignoreScripts: true
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+minimumReleaseAge: 1440
+```
 
-The remediation addressed the highest-value repository controls:
+That keeps the one-day pnpm release-age floor while Renovate uses a stronger seven-day minimum release age.
 
-- Immutable GitHub Action references.
-- Narrower workflow token permissions.
-- Dedicated SAST coverage with CodeQL.
-- Security policy and governance documentation.
-- Dependency update automation.
+Six exact-version trust-policy exceptions are documented for currently locked packages whose upstream ownership/repository provenance was verified:
 
-Remaining scorecard observations such as packaging/binary-artifact heuristics should be treated separately from application runtime security; they do not justify introducing an unnecessary packaging or container pipeline.
+- `@vercel/cli-config@0.3.1`
+- `@vercel/cli-exec@1.0.1`
+- `@vercel/functions@3.9.11`
+- `@vercel/oidc@4.0.0`
+- `prisma@7.10.0`
+- `rollup@2.80.0`
 
-### Prowler
+No wildcard trust exclusion was added.
 
-**Not applicable.**
+### ORB-SEC-007 — Medium — Mutable CI action references
 
-The repository does not contain AWS, Terraform, Kubernetes, CloudFormation, Pulumi, or Docker infrastructure requiring a cloud-context scan.
+**Fix**
+Security-sensitive GitHub Actions are pinned to immutable commit SHAs and checkout uses `persist-credentials: false`.
 
-### Lynis
+### ORB-SEC-008 — Medium — Deployment migration failure mode
 
-Lynis was run against the disposable GitHub-hosted audit runner. Its results are not represented as production host findings because OrbitPM's production runtime is Vercel-managed.
+**Fix**
+Production migration workflow now fails when database credentials are missing rather than printing a warning and continuing.
 
-### Lighthouse
+### ORB-SEC-009 — Medium — Test and agent governance gaps
 
-The first Lighthouse attempt was invalid because the local Next.js process was missing required environment variables. The audit workflow was corrected to start the production server with ephemeral audit-only credentials.
+**Fix**
+- `AGENTS.md` and `CLAUDE.md` align to the dev-pipeline inner/middle/outer loops.
+- Added repository-local comprehensive audit and engineering review commands.
+- Added `.claude/commands/comprehensive-audit.md` and `.claude/commands/engineering-review.md`.
+- Added Vitest compatibility for Next's `server-only` marker without weakening production behavior.
+- Commitlint explicitly recognizes the project-specific `security` Conventional Commit type.
 
-A fresh post-remediation Lighthouse run is currently waiting on GitHub Actions approval for the bot-pushed PR commit; the earlier score is therefore not used as a final production-security claim.
+### ORB-SEC-010 — Medium — Generated/local artifacts committed to source
 
-### OWASP ZAP
+**Fix**
+- Removed committed local database/build artifacts.
+- Expanded `.gitignore` for database and TypeScript build-state files.
 
-A baseline ZAP scan was added against the local production build. Findings are retained as workflow artifacts rather than silently discarded.
+## Security pipeline
 
-### SBOM
+The repository now runs a comprehensive audit pipeline covering:
 
-Trivy CycloneDX SBOM generation was added to the audit workflow. The initial production graph contained 466 components.
+```text
+dependency install policy
+→ Scorecard
+→ Trivy
+→ Semgrep
+→ CodeQL
+→ Gitleaks
+→ pnpm audit
+→ TruffleHog
+→ Prowler (when IaC/cloud config exists)
+→ Lynis
+→ build
+→ OWASP ZAP
+→ SBOM
+→ Lighthouse
+→ evidence summary + artifact upload
+```
 
-## Dev pipeline hardening
+The regular CI path is:
 
-The repository now follows a deliberately small, stack-appropriate engineering pipeline:
+```text
+format
+→ lint
+→ typecheck
+→ unit tests
+→ commit policy
+→ OpenAPI contract
+→ build
+→ security
+→ E2E
+```
 
-- Conventional Commits + commitlint.
-- Lefthook pre-commit/pre-push hooks.
-- mise runtime/task definitions.
-- Biome + TypeScript strictness.
-- Vitest + Playwright + axe-core.
-- OpenAPI + Spectral.
-- Gitleaks, TruffleHog, Trivy, Semgrep, CodeQL, Scorecard, ZAP, and SBOM checks.
-- Dependabot and Renovate release-age controls.
-- Immutable Action references and least-privilege workflow permissions.
-- AGENTS.md and CLAUDE.md with repository-inspection and minimality rules.
-- Local `.claude/commands/` for validation, security review, and Ponytail-style minimality checks.
-- SECURITY.md, security runbooks, ADRs, CODEOWNERS, and integration-selection guidance.
+## Public APIs integration policy
 
-## Reference-project alignment
+`public-apis/public-apis` is treated as a discovery catalog only.
 
-### Public APIs
+Future providers must remain:
 
-The public-apis catalog is used as an integration discovery reference only. OrbitPM does not add a runtime dependency on the catalog. Candidate future providers are isolated behind server-side adapters with explicit authentication, timeouts, bounded retries, response validation, and an ADR before implementation.
+- server-side;
+- explicitly authenticated/scoped;
+- timeout and retry bounded;
+- response-schema validated;
+- isolated behind a small adapter;
+- documented in an ADR.
 
-### Awesome Claude Code
+No new external provider was made a mandatory OrbitPM runtime dependency.
 
-The repository now has agent governance that centralizes:
+## Claude Code / agent governance
 
-- progressive context loading,
-- inspection before editing,
-- reuse over reinvention,
-- explicit verification ladders,
-- security-gate preservation,
-- repository-local commands,
-- documentation updates for behavioral/architectural changes.
+The repository incorporates the useful parts of `awesome-claude-code` without copying a large agent framework:
 
-### Ponytail
+- progressive context loading;
+- local commands for repeatable reviews;
+- explicit verification ladders;
+- no security-gate bypasses;
+- repository inspection before editing.
 
-The repository adopts the core Ponytail principle:
+This is intentionally small and project-specific.
 
-> Does this need to exist?
+## Ponytail application
 
-Before adding an abstraction, code path, dependency, service, or configuration layer, the workflow now evaluates existing repository capabilities, standard-library/browser capabilities, and installed dependencies before introducing new complexity.
+The system was not expanded into Redis, queues, Kubernetes, separate services, or a second backend.
 
-## Verification
-
-A full pre-remediation CI run succeeded across:
-
-- dependency installation,
-- Prisma client generation,
-- formatting,
-- linting,
-- TypeScript typecheck,
-- unit tests with coverage,
-- commit message policy,
-- OpenAPI contract linting,
-- production build,
-- Gitleaks,
-- Trivy,
-- Playwright E2E.
-
-The dependency-remediation workflow subsequently succeeded in generating the audited pnpm graph and passed `pnpm audit --prod`.
-
-The current PR head was generated by a GitHub Actions remediation commit. GitHub has placed the post-remediation PR checks in an **action_required** state, so the final post-lockfile CI/CodeQL/Lighthouse execution needs repository-level approval before it can run. This is a GitHub workflow-governance state, not an application test failure.
-
-## History-rewrite decision
-
-No destructive Git history rewrite was performed.
-
-The current tree has no deterministic production authentication/database defaults and no current hardcoded credential fallback. The two historical Gitleaks findings should be treated as credential-rotation candidates if those values were ever used outside isolated CI testing.
+The architecture remains a Vercel-hosted Next.js modular monolith because the repository has no measured requirement for those escalation paths.
 
 ## Residual risk
 
-The only confirmed dependency finding that could not be eliminated is `braces@3.0.3` in the development-only Spectral dependency chain. The current GitHub Advisory Database lists affected versions through 3.0.3 and currently reports no patched release. The risk is limited to the dev/API-lint toolchain and is not present in the production dependency graph. https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
+1. **Historical secret exposure:** current tree is clean, but Git history still contains the historical Gitleaks hits. Rotate/revoke any credential if those values were ever real.
+2. **Development-only advisory monitoring:** continue monitoring transitive development tooling findings separately from the production graph.
+3. **Operational tooling:** Prowler and production-host Lynis are contextual controls; Vercel-managed infrastructure cannot be represented accurately by scanning the GitHub-hosted runner.
 
-Do not replace this package with an unreviewed Git commit merely to make scanners green. Prefer an upstream patched release or a maintained parent-package update when available.
+## Verification status
 
-## Recommended next action
+Latest CI on the current remediation line has reached green dependency installation, Prisma generation, formatting, linting, typecheck and the full 107-test unit suite. The current branch is additionally running the OpenAPI, build, security and audit gates.
 
-Approve the GitHub Actions checks for PR #16, then rerun the post-remediation CI, CodeQL, and comprehensive audit workflows. No production deployment should be promoted until those checks report success on commit `5a64312aae53b661c796c3719bf5506385cd4a7d`.
+Do not merge the PR until the newest CI and comprehensive-audit workflows report success on the same head commit.
+
+## Final repository artifacts
+
+- `AGENTS.md`
+- `CLAUDE.md`
+- `.claude/commands/comprehensive-audit.md`
+- `.claude/commands/engineering-review.md`
+- `.github/workflows/ci.yml`
+- `.github/workflows/codeql.yml`
+- `.github/workflows/comprehensive-security-audit.yml`
+- `SECURITY.md`
+- `SECURITY_AUDIT_RESULTS.md`
+- `docs/architecture/adr/0003-security-and-dev-pipeline.md`
+- `docs/integrations/public-apis.md`
+- `pnpm-workspace.yaml`
+- `renovate.json`
+- `.gitleaks.toml`
+
