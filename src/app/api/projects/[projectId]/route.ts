@@ -1,5 +1,5 @@
-import { canManageProject } from "@/lib/authz";
 import { recordActivity } from "@/lib/activity";
+import { canManageProject } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { jsonError } from "@/lib/http";
 import { getSession } from "@/lib/session";
