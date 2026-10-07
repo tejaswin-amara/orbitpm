@@ -36,6 +36,14 @@ jobs:
       - name: Prepare audit directories
         run: mkdir -p audit-logs tools
 
+      - name: OpenSSF Scorecard scan
+        uses: ossf/scorecard-action@55891bbd73f2425e97637d96e306fc9d491d0b21
+        with:
+          results_file: audit-logs/scorecard.json
+          results_format: json
+          repo_token: ${{ github.token }}
+          publish_results: false
+
       - name: Install Trivy
         shell: bash
         run: |
@@ -176,14 +184,6 @@ jobs:
           mv "${RUNNER_TEMP}/orbitpm-node_modules" node_modules
           mv "${RUNNER_TEMP}/orbitpm-audit-logs" audit-logs
 
-      - name: OpenSSF Scorecard scan
-        uses: ossf/scorecard-action@55891bbd73f2425e97637d96e306fc9d491d0b21
-        with:
-          results_file: audit-logs/scorecard.json
-          results_format: json
-          repo_token: ${{ github.token }}
-          publish_results: false
-
       - name: Prowler contextual cloud scan
         shell: bash
         run: |
@@ -292,8 +292,14 @@ jobs:
                   "## Semgrep",
                   f"- findings: {len(results)}",
                   f"- severities: {dict(Counter((x.get('extra') or {}).get('severity','UNKNOWN') for x in results))}",
-                  "",
               ]
+              for finding in results[:20]:
+                  start = finding.get("start") or {}
+                  out.append(
+                      f"- {finding.get('check_id','UNKNOWN')} | {finding.get('path','?')}:{start.get('line','?')} | "
+                      f"{(finding.get('extra') or {}).get('severity','UNKNOWN')}: {(finding.get('extra') or {}).get('message','')}"
+                  )
+              out.append("")
           else:
               out += ["## Semgrep", "- result unavailable", ""]
 
@@ -306,7 +312,13 @@ jobs:
 
           gitleaks = load_json("gitleaks.json")
           if isinstance(gitleaks, list):
-              out += ["## Gitleaks", f"- findings: {len(gitleaks)}", ""]
+              out += ["## Gitleaks", f"- findings: {len(gitleaks)}"]
+              for finding in gitleaks[:20]:
+                  out.append(
+                      f"- {finding.get('RuleID','UNKNOWN')} | {finding.get('File','?')}:{finding.get('StartLine','?')} | "
+                      f"{finding.get('Description','')}"
+                  )
+              out.append("")
           else:
               out += ["## Gitleaks", "- result unavailable", ""]
 
