@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "CI expressions reference GitHub Actions secrets; they do not contain secret material."
+regexTarget = "match"
+regexes = [
+  '''\$\{\{\s*secrets\.[A-Z0-9_]+\s*\}\}'''
+]
