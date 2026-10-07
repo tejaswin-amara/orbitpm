@@ -1,6 +1,12 @@
 [tools]
 node = "22"
+pnpm = "12.9.1"
 
-[tasks]
-dev = "pnpm dev"
-validate = "pnpm validate"
+[tasks.validate]
+run = "pnpm validate"
+
+[tasks.security]
+run = "pnpm security:scan"
+
+[tasks.test]
+run = "pnpm test"

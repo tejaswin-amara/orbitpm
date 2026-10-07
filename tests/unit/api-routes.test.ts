@@ -3,6 +3,7 @@ import { POST as postComment } from "@/app/api/projects/[projectId]/comments/rou
 import {
   DELETE as deleteProject,
   GET as getProjectDetail,
+  PATCH as patchProject,
 } from "@/app/api/projects/[projectId]/route";
 import {
   GET as getProjectTasks,
@@ -22,6 +23,7 @@ vi.mock("@/lib/db", () => ({
     project: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -35,6 +37,9 @@ vi.mock("@/lib/db", () => ({
     },
     comment: {
       create: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn(),
     },
     activityEvent: {
       create: vi.fn(),
@@ -239,11 +244,74 @@ describe("API Route Handlers Unit Tests", () => {
       expect(prisma.project.create).toHaveBeenCalled();
     });
 
+    it("PATCH /api/projects/:id rejects non-owner mutation with 403", async () => {
+      vi.mocked(prisma.project.findUnique).mockResolvedValueOnce({
+        id: "p-owned-by-someone-else",
+        creatorId: "user-other",
+      } as unknown as Awaited<ReturnType<typeof prisma.project.findUnique>>);
+
+      const req = new Request("http://localhost/api/projects/p-owned-by-someone-else", {
+        method: "PATCH",
+        body: JSON.stringify({ status: "ARCHIVED" }),
+      });
+      const res = await patchProject(req, {
+        params: Promise.resolve({ projectId: "p-owned-by-someone-else" }),
+      });
+
+      expect(res.status).toBe(403);
+      expect(prisma.project.update).not.toHaveBeenCalled();
+    });
+
+    it("DELETE /api/projects/:id rejects non-owner mutation with 403", async () => {
+      vi.mocked(prisma.project.findUnique).mockResolvedValueOnce({
+        id: "p-owned-by-someone-else",
+        creatorId: "user-other",
+      } as unknown as Awaited<ReturnType<typeof prisma.project.findUnique>>);
+
+      const req = new Request("http://localhost/api/projects/p-owned-by-someone-else", {
+        method: "DELETE",
+      });
+      const res = await deleteProject(req, {
+        params: Promise.resolve({ projectId: "p-owned-by-someone-else" }),
+      });
+
+      expect(res.status).toBe(403);
+      expect(prisma.project.delete).not.toHaveBeenCalled();
+    });
+
+    it("PATCH /api/projects/:id allows an admin to mutate another user's project", async () => {
+      vi.mocked(prisma.project.findUnique).mockResolvedValueOnce({
+        id: "p-admin",
+        creatorId: "user-other",
+      } as unknown as Awaited<ReturnType<typeof prisma.project.findUnique>>);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+        role: "ADMIN",
+      } as unknown as Awaited<ReturnType<typeof prisma.user.findUnique>>);
+      vi.mocked(prisma.project.update).mockResolvedValueOnce({
+        id: "p-admin",
+        status: "ARCHIVED",
+      } as unknown as Awaited<ReturnType<typeof prisma.project.update>>);
+      vi.mocked(prisma.activityEvent.create).mockResolvedValueOnce(
+        {} as unknown as Awaited<ReturnType<typeof prisma.activityEvent.create>>,
+      );
+
+      const req = new Request("http://localhost/api/projects/p-admin", {
+        method: "PATCH",
+        body: JSON.stringify({ status: "ARCHIVED" }),
+      });
+      const res = await patchProject(req, {
+        params: Promise.resolve({ projectId: "p-admin" }),
+      });
+
+      expect(res.status).toBe(200);
+      expect(prisma.project.update).toHaveBeenCalled();
+    });
+
     it("DELETE /api/projects/:id deletes project and returns 204", async () => {
-      vi.mocked(prisma.project.findFirst).mockResolvedValueOnce({
+      vi.mocked(prisma.project.findUnique).mockResolvedValueOnce({
         id: "p-del",
-        name: "To Delete",
-      } as unknown as Awaited<ReturnType<typeof prisma.project.findFirst>>);
+        creatorId: "user-123",
+      } as unknown as Awaited<ReturnType<typeof prisma.project.findUnique>>);
       vi.mocked(prisma.project.delete).mockResolvedValueOnce(
         {} as unknown as Awaited<ReturnType<typeof prisma.project.delete>>,
       );

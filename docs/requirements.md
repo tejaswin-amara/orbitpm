@@ -6,25 +6,30 @@ Provide a focused project-management product that a small team can deploy on Ver
 
 ## Users
 
-- Workspace owners: manage projects and membership-sensitive operations.
-- Workspace admins: manage project lifecycle.
-- Members: create and move tasks, comment, and inspect work in their workspace.
+- Project creators: own the projects they create and control project lifecycle mutations.
+- Members: create projects, create and move tasks, comment, and inspect work in the single company.
+- The current data model does not implement separate workspace membership or an application-wide admin role.
 
 ## Core user stories
 
-1. A new user signs up and receives a default workspace.
+1. A new user can sign up locally; production signup is restricted unless explicitly enabled or an approved email domain is configured.
 2. A user creates a project with a target date and description.
-3. A user creates tasks with a priority and due date.
-4. A user moves tasks through Todo → In progress → Review → Done.
-5. A user comments on a project.
-6. A user sees completion and overdue metrics without manual reporting.
-7. Unauthorized users cannot access another workspace's project data.
+3. A project creator can update or delete their project.
+4. A user creates tasks with a priority and due date.
+5. A user moves tasks through Todo → In progress → Review → Done.
+6. A user comments on a project.
+7. A user sees completion and overdue metrics without manual reporting.
+8. Unauthenticated users cannot access authenticated project data.
+9. Authenticated users cannot mutate or delete another user's project.
 
 ## Non-functional requirements
 
 - All persistent access is authenticated.
 - All mutable input is schema-validated.
 - Server-side authorization is mandatory.
+- Production project lifecycle mutations are owner-controlled.
+- Better Auth origin validation remains enabled.
+- Production authentication requires an explicitly configured secret; no deterministic secret is accepted as a fallback.
 - App can run on Vercel with a managed PostgreSQL database.
 - Production changes are gated by automated CI.
 - Health endpoint provides a deploy smoke-test target.

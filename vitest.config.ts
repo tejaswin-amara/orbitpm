@@ -9,5 +9,10 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     coverage: { provider: "v8", reporter: ["text", "html"] },
   },
-  resolve: { alias: { "@": path.resolve(process.cwd(), "src") } },
+  resolve: {
+    alias: {
+      "@": path.resolve(process.cwd(), "src"),
+      "server-only": path.resolve(process.cwd(), "tests/mocks/server-only.ts"),
+    },
+  },
 });

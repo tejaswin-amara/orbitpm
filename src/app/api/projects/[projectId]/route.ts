@@ -1,4 +1,5 @@
 import { recordActivity } from "@/lib/activity";
+import { canManageProject } from "@/lib/authz";
 import { prisma } from "@/lib/db";
 import { jsonError } from "@/lib/http";
 import { getSession } from "@/lib/session";
@@ -24,10 +25,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ proje
   const { projectId } = await context.params;
   const parsed = updateProjectSchema.safeParse(await request.json());
   if (!parsed.success) return jsonError("Invalid request", 422);
-  const current = await prisma.project.findFirst({
-    where: { id: projectId },
-  });
-  if (!current) return jsonError("Project not found", 404);
+  const access = await canManageProject(projectId, session.user.id);
+  if (!access) return jsonError("Project not found", 404);
+  if (access === "FORBIDDEN") return jsonError("Forbidden", 403);
+
   const project = await prisma.project.update({
     where: { id: projectId },
     data: {
@@ -57,15 +58,10 @@ export async function DELETE(
   const session = await getSession();
   if (!session) return jsonError("Unauthorized", 401);
   const { projectId } = await context.params;
-  const current = await prisma.project.findFirst({
-    where: { id: projectId },
-  });
-  if (!current) return jsonError("Project not found", 404);
+  const access = await canManageProject(projectId, session.user.id);
+  if (!access) return jsonError("Project not found", 404);
+  if (access === "FORBIDDEN") return jsonError("Forbidden", 403);
+
   await prisma.project.delete({ where: { id: projectId } });
-  await recordActivity({
-    actorId: session.user.id,
-    action: "project.deleted",
-    metadata: { projectId },
-  });
   return new Response(null, { status: 204 });
 }
