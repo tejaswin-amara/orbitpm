@@ -22,6 +22,14 @@ Read repository conventions, manifests, Prisma schema, architecture ADRs, and ex
 
 OrbitPM is a Vercel-hosted Next.js modular monolith with PostgreSQL. Do not introduce a second backend framework, microservices, Redis, Kubernetes, or a separate worker without a measured requirement and an ADR.
 
+## Operating loops
+
+Inner loop: specification → implementation → focused tests → pre-commit/pre-push.
+Middle loop: format → lint → typecheck → tests → contract checks → build → security scans.
+Outer loop: preview → health check → telemetry → rollback/runbook.
+
+Use one tool per problem category unless a documented gap requires a second tool. Escalate architecture only when measured requirements justify it.
+
 ## Required gates
 
 After logical changes, run targeted tests. Before merge, run pnpm validate and the CI security gates. Never disable a linter or security scan to make CI green.
@@ -41,6 +49,10 @@ Prefer accessible, source-owned components. Use Lucide for icons. Keep interacti
 ## External integrations
 
 Use the public-apis catalog for discovery only. Every actual provider integration requires explicit auth/scopes, timeout/retry policy, response validation, and an ADR.
+
+## Reference governance
+
+The agent workflow follows the repository engineering standard and uses Ponytail as the default minimality rule. Claude Code command patterns are kept progressive and task-specific rather than loading a large instruction set for every change. The public-apis catalog is a discovery source for optional integrations; it is not a runtime dependency.
 
 ## AI-agent workflow
 
