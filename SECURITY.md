@@ -6,7 +6,12 @@ The current main branch is the supported security baseline.
 
 ## Reporting a vulnerability
 
-Do not disclose suspected vulnerabilities in a public issue. Contact the repository owner privately with:
+Do not disclose suspected vulnerabilities in a public issue.
+
+Use GitHub's private vulnerability reporting for OrbitPM:
+https://github.com/tejaswin-amara/orbitpm/security/advisories/new
+
+Include:
 
 - affected version or commit,
 - exact reproduction steps,
@@ -18,6 +23,7 @@ Do not disclose suspected vulnerabilities in a public issue. Contact the reposit
 OrbitPM uses:
 
 - Better Auth with server-side authorization,
+- explicit member/admin authorization for project lifecycle mutations,
 - Zod input validation,
 - Prisma parameterized database access,
 - security response headers,
