@@ -13,5 +13,5 @@ export async function canManageProject(projectId: string, userId: string) {
     where: { id: userId },
     select: { role: true },
   });
-  return actor?.role === "ADMIN" ? project : false;
+  return actor?.role === "ADMIN" ? project : "FORBIDDEN";
 }
