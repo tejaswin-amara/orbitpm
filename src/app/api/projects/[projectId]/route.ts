@@ -27,7 +27,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ proje
   if (!parsed.success) return jsonError("Invalid request", 422);
   const access = await canManageProject(projectId, session.user.id);
   if (!access) return jsonError("Project not found", 404);
-  if (access === false) return jsonError("Forbidden", 403);
+  if (access === "FORBIDDEN") return jsonError("Forbidden", 403);
 
   const project = await prisma.project.update({
     where: { id: projectId },
