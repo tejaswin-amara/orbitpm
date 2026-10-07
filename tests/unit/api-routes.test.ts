@@ -245,10 +245,10 @@ describe("API Route Handlers Unit Tests", () => {
     });
 
     it("PATCH /api/projects/:id rejects non-owner mutation with 403", async () => {
-      vi.mocked(prisma.project.findFirst).mockResolvedValueOnce({
+      vi.mocked(prisma.project.findUnique).mockResolvedValueOnce({
         id: "p-owned-by-someone-else",
         creatorId: "user-other",
-      } as unknown as Awaited<ReturnType<typeof prisma.project.findFirst>>);
+      } as unknown as Awaited<ReturnType<typeof prisma.project.findUnique>>);
 
       const req = new Request("http://localhost/api/projects/p-owned-by-someone-else", {
         method: "PATCH",
