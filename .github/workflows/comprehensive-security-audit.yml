@@ -209,6 +209,25 @@ jobs:
           export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
           pnpm build
 
+      - name: Start application for DAST and Lighthouse
+        shell: bash
+        run: |
+          set -euo pipefail
+          export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
+          export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
+          export BETTER_AUTH_URL="http://127.0.0.1:3000"
+          export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
+          nohup pnpm start > audit-logs/next-start.txt 2>&1 &
+          echo $! > audit-logs/next.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat audit-logs/next-start.txt
+          exit 1
+
       - name: OWASP ZAP baseline scan
         shell: bash
         run: |
@@ -225,15 +244,6 @@ jobs:
       - name: Lighthouse local security/performance audit
         shell: bash
         run: |
-          export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
-          export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
-          export BETTER_AUTH_URL="http://127.0.0.1:3000"
-          export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
-          nohup pnpm start > audit-logs/next-start.txt 2>&1 &
-          for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:3000/ > /dev/null; then break; fi
-            sleep 2
-          done
           npx --yes lighthouse@latest http://127.0.0.1:3000/             --output=json             --output-path="$(pwd)/audit-logs/lighthouse.json"             --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"             --only-categories=performance,accessibility,best-practices,seo || true
 
       - name: Summarize discovered audit inputs
