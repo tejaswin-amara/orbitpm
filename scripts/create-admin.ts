@@ -29,8 +29,4 @@ const result = await auth.api.createUser({
   },
 });
 
-if (result.error) {
-  throw new Error(result.error.message);
-}
-
 console.log(`Admin account ready: ${result.user.email} (${username})`);
