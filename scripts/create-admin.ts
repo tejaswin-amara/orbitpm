@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth";
 import "dotenv/config";
 
 const email = process.env.ADMIN_EMAIL;
@@ -15,6 +14,8 @@ if (!email || !username || !password) {
 if (password.length < 10) {
   throw new Error("ADMIN_PASSWORD must be at least 10 characters.");
 }
+
+const { auth } = await import("@/lib/auth");
 
 const result = await auth.api.createUser({
   body: {
