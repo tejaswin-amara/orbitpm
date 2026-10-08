@@ -1,6 +1,7 @@
 import "server-only";
 import { betterAuth } from "better-auth";
 import { toNextJsHandler } from "better-auth/next-js";
+import { admin, username } from "better-auth/plugins";
 import { dbPool } from "@/lib/db";
 import { env } from "@/lib/env";
 
@@ -15,6 +16,7 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 10,
   },
+  plugins: [admin(), username()],
   ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
     ? {
         socialProviders: {
