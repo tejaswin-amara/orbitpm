@@ -52,6 +52,13 @@ const testSession: SessionData = {
     createdAt: new Date(),
     updatedAt: new Date(),
     emailVerified: true,
+    role: "user",
+    banned: false,
+    banReason: null,
+    banExpires: null,
+    username: null,
+    displayUsername: null,
+    image: null,
   },
   session: {
     id: "sess-1",
