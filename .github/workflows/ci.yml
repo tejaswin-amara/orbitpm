@@ -54,6 +54,14 @@ jobs:
           scan-ref: .
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
 
   e2e:
     runs-on: ubuntu-latest
@@ -69,10 +77,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
+      - run: pnpm build
+        env:
+          DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/orbitpm' }}
+          BETTER_AUTH_SECRET: ${{ secrets.TEST_BETTER_AUTH_SECRET || '0123456789abcdef0123456789abcdef' }}
+          BETTER_AUTH_URL: http://127.0.0.1:3000
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
         env:
-          DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.TEST_BETTER_AUTH_SECRET }}
+          DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/orbitpm' }}
+          BETTER_AUTH_SECRET: ${{ secrets.TEST_BETTER_AUTH_SECRET || '0123456789abcdef0123456789abcdef' }}
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000

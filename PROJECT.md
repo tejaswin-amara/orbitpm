@@ -2,12 +2,12 @@
 
 ## Architecture
 OrbitPM is a modern project intelligence and management application built on Next.js 16 (App Router with Turbopack), React 19, Tailwind CSS v4, Prisma ORM, and Better Auth.
-The redesign transforms the user interface into a bespoke, highly interactive, zero-scroll spatial workspace featuring React Bits micro-animations, glassmorphic visual hierarchy, fluid native drag-and-drop, and Generative UI assistant protocols.
+The redesign transforms the user interface into a bespoke, highly interactive, zero-scroll spatial project featuring React Bits micro-animations, glassmorphic visual hierarchy, fluid native drag-and-drop, and Generative UI assistant protocols.
 
 ### Core Architecture Layers:
 1. **Design System & Spatial Shell Layer (Completed in M1)**:
    - Zero-scroll desktop constraint: `html, body { height: 100vh; overflow: hidden; }` for 1080p+ displays.
-   - Modular spatial shell: Fixed workspace dock/header (`h-14`), flex-grow canvas (`flex-1 min-h-0 overflow-hidden`), internal scroll containers with custom sleek scrollbars (`spatial-scrollbar`).
+   - Modular spatial shell: Fixed project dock/header (`h-14`), flex-grow canvas (`flex-1 min-h-0 overflow-hidden`), internal scroll containers with custom sleek scrollbars (`spatial-scrollbar`).
    - Deep slate/zinc dark aesthetic (`oklch` tokens) with multi-layered glassmorphic acrylic panels (`backdrop-filter: blur(20px)` with specular highlights).
 2. **React Bits Animation Suite (Milestone M2)**:
    - `ParticlesBackground.tsx`: Interactive canvas particles with cursor repulsion and 60fps lifecycle cleanup.
@@ -20,7 +20,7 @@ The redesign transforms the user interface into a bespoke, highly interactive, z
    - Contextual slide-over inspector sheet (`w-[480px]`) for editing task details, assignees, and comments without layout shift.
    - Mobile responsive adaptation: Swipeable column rail and slide-up bottom sheets (`max-h-[85vh]`).
 4. **Generative UI & Agent Protocols (Milestone M4)**:
-   - Workspace dock assistant bar with universal keyboard trigger (`Cmd+K`).
+   - Project dock assistant bar with universal keyboard trigger (`Cmd+K`).
    - Natural language intent engine supporting 4 core intents: Task Filtering, Automated Sprint Summarization, Generative Quick Task Creation, and Project Health/Blocker Analysis.
    - Dynamic cards rendered in spatial overlays: `<SprintSummaryCard />`, `<TaskListCard />`, `<TaskCreationPreviewCard />`, and `<ProjectHealthCard />`.
 5. **Quality & Verification Harness (Milestone M5 & Parallel Track)**:
@@ -37,7 +37,7 @@ The redesign transforms the user interface into a bespoke, highly interactive, z
 | 3 | React Bits Component Suite | At least 4 distinct components (`ParticlesBackground`, `SplitText`, `SpotlightCard`, `MagneticButton`) with 60fps loop and reduced-motion fallback | M2 | ORIGINAL_REQUEST §R3 |
 | 4 | Fluid Kanban Drag-and-Drop | High-performance drag-and-drop task movements replacing `<select>` dropdown, with drag elevation, drop zone glow, and zero layout shift | M3 | ORIGINAL_REQUEST §R3 |
 | 5 | Contextual Slide-Over Inspector | Accessible slide-over inspector sheet for viewing and editing task details, statuses, priorities, and comments without full page navigation | M3 | ORIGINAL_REQUEST §R2 |
-| 6 | Generative UI Assistant Bar | Workspace dock conversational assistant with natural language intent recognition (filter, summarize, create, health check) | M4 | ORIGINAL_REQUEST §R4 |
+| 6 | Generative UI Assistant Bar | Project dock conversational assistant with natural language intent recognition (filter, summarize, create, health check) | M4 | ORIGINAL_REQUEST §R4 |
 | 7 | Dynamic Generative Cards | Structured card rendering for AI responses (`SprintSummaryCard`, `TaskListCard`, `TaskCreationPreviewCard`, `ProjectHealthCard`) in spatial overlays | M4 | ORIGINAL_REQUEST §R4 |
 | 8 | E2E Testing Suite & Viewport Harness | Playwright opaque-box test suite for 1080p zero-scroll, mobile drawer adaptation, and feature flows; Vitest component tests; 100% test pass | M5 / Test Track | ORIGINAL_REQUEST §R5 |
 
@@ -76,7 +76,7 @@ The E2E Testing Orchestrator runs concurrently with implementation milestones:
 - `onCloseInspector: () => void`
 - `onTaskUpdate: (taskId: string, patch: Partial<Task>) => Promise<void>`
 
-### Workspace Dock ↔ Generative Assistant
+### Project Dock ↔ Generative Assistant
 - `isAssistantOpen: boolean`
 - `onToggleAssistant: () => void`
 - `onExecuteIntent: (intent: AssistantIntent) => void`
@@ -106,10 +106,10 @@ src/
 │       ├── page.tsx                      # Zero-scroll overview dashboard
 │       └── projects/
 │           ├── page.tsx                  # Projects directory canvas
-│           └── [projectId]/page.tsx      # Kanban workspace & slide-over inspector
+│           └── [projectId]/page.tsx      # Kanban project & slide-over inspector
 ├── components/
 │   ├── layout/
-│   │   ├── workspace-dock.tsx            # Fixed top/bottom dock with nav & assistant trigger
+│   │   ├── project-dock.tsx            # Fixed top/bottom dock with nav & assistant trigger
 │   │   ├── mobile-sheet.tsx              # Mobile responsive navigation/inspector sheet
 │   │   └── user-nav.tsx                  # User profile and session status
 │   ├── react-bits/

@@ -6,19 +6,19 @@ Provide a focused project-management product that a small team can deploy on Ver
 
 ## Users
 
-- Workspace owners: manage projects and membership-sensitive operations.
-- Workspace admins: manage project lifecycle.
-- Members: create and move tasks, comment, and inspect work in their workspace.
+- Project owners: manage projects and membership-sensitive operations.
+- Project admins: manage project lifecycle.
+- Members: create and move tasks, comment, and inspect work in their project.
 
 ## Core user stories
 
-1. A new user signs up and receives a default workspace.
+1. A new user signs up and receives a default project.
 2. A user creates a project with a target date and description.
 3. A user creates tasks with a priority and due date.
 4. A user moves tasks through Todo → In progress → Review → Done.
 5. A user comments on a project.
 6. A user sees completion and overdue metrics without manual reporting.
-7. Unauthorized users cannot access another workspace's project data.
+7. Unauthorized users cannot access another project's project data.
 
 ## Non-functional requirements
 
