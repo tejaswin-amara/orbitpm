@@ -8,7 +8,7 @@ We chose a direct, centralized, relational authorization model using custom poli
 
 - **Subject Identity**: Provided by Better Auth through a session user ID.
 - **Roles**: Better Auth provides the foundational user roles (e.g., \`user\`, \`admin\`).
-- **Project Ownership**: Users who create a project are recorded as the \`creatorId\`. Users who are assigned to tasks within a project also gain view access to the project context.
+- **Project Ownership**: Authorization is enforced using shared project ownership and role-based checks. These explicit server-side policies (e.g., `canViewProject`, `canManageProject`) intercept and filter all database queries before any record is returned or mutated. For instance, project deletion rigidly requires an active session matching the project's `creatorId` or an `admin` role.
 - **Task Ownership**: Task access is derived from project visibility. Task management is permitted for the task's specific assignee or the project's creator/manager.
 - **Administrator Privileges**: The \`admin\` role bypasses resource constraints, granting full system access for administrative overrides.
 - **Forbidden Operations**: Unauthorized access to any API or page route immediately returns a \`404 Not Found\` (or \`403 Forbidden\` where appropriate) to avoid resource enumeration and data leakage.
