@@ -9,10 +9,15 @@ const serverEnvSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().optional(),
 });
 
+const isBuild = process.env.npm_lifecycle_event === "build";
 export const env = serverEnvSchema.parse({
-  DATABASE_URL: process.env.DATABASE_URL,
-  BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
-  BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+  DATABASE_URL:
+    process.env.DATABASE_URL ||
+    (isBuild ? "postgresql://postgres:postgres@127.0.0.1:5432/orbitpm" : undefined),
+  BETTER_AUTH_SECRET:
+    process.env.BETTER_AUTH_SECRET ||
+    (isBuild ? "this_is_a_development_secret_for_tests" : undefined),
+  BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || (isBuild ? "http://127.0.0.1:3000" : undefined),
   GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
   GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
 });

@@ -1,4 +1,3 @@
-
 [allowlist]
 description = "Allowlist dummy Better Auth secrets in CI workflows"
 regexes = [
