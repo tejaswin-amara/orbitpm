@@ -33,7 +33,7 @@ jobs:
       - run: pnpm build
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
-          BETTER_AUTH_SECRET: 0123456789abcdef0123456789abcdef
+          BETTER_AUTH_SECRET: this-is-a-dummy-secret-value-for-testing-12345678
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
 
@@ -80,13 +80,13 @@ jobs:
       - run: pnpm build
         env:
           DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/orbitpm' }}
-          BETTER_AUTH_SECRET: ${{ secrets.TEST_BETTER_AUTH_SECRET || '0123456789abcdef0123456789abcdef' }}
+          BETTER_AUTH_SECRET: ${{ secrets.TEST_BETTER_AUTH_SECRET || 'this-is-a-dummy-secret-value-for-testing-12345678' }}
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
         env:
           DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/orbitpm' }}
-          BETTER_AUTH_SECRET: ${{ secrets.TEST_BETTER_AUTH_SECRET || '0123456789abcdef0123456789abcdef' }}
+          BETTER_AUTH_SECRET: ${{ secrets.TEST_BETTER_AUTH_SECRET || 'this-is-a-dummy-secret-value-for-testing-12345678' }}
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
