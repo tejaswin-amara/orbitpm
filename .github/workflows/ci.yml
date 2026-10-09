@@ -33,13 +33,17 @@ jobs:
       - run: pnpm build
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
-          BETTER_AUTH_SECRET: 0123456789abcdef0123456789abcdef
+          BETTER_AUTH_SECRET: abcdefghijklmnopqrstuvwxyz123456
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
 
   security:
     runs-on: ubuntu-latest
     needs: quality
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -48,16 +52,38 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@c03d123cb480c08c69b054af418ea5e69fe6e57e
         with:
           scan-type: fs
           scan-ref: .
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
 
   e2e:
     runs-on: ubuntu-latest
     needs: security
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: orbitpm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -69,10 +95,19 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
+      - run: pnpm db:migrate:deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
+      - run: pnpm build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
+          BETTER_AUTH_SECRET: abcdefghijklmnopqrstuvwxyz123456
+          BETTER_AUTH_URL: http://127.0.0.1:3000
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
         env:
-          DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.TEST_BETTER_AUTH_SECRET }}
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
+          BETTER_AUTH_SECRET: abcdefghijklmnopqrstuvwxyz123456
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
