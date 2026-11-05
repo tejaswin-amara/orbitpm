@@ -14,6 +14,7 @@ model User {
   email           String      @unique
   emailVerified   Boolean
   image           String?
+<<<<<<< HEAD
   role            UserRole    @default(MEMBER)
   createdAt       DateTime
   updatedAt       DateTime
@@ -23,6 +24,22 @@ model User {
   tasksAssigned   Task[]      @relation("TaskAssignee")
   comments        Comment[]
   activities      ActivityEvent[] @relation("ActivityActor")
+=======
+  role            String      @default("user")
+  banned          Boolean     @default(false)
+  banReason       String?
+  banExpires      DateTime?
+  username        String?     @unique
+  displayUsername String?
+  createdAt       DateTime
+  updatedAt       DateTime
+  sessions      Session[]
+  accounts      Account[]
+  projectsCreated Project[]  @relation("ProjectCreator")
+  tasksAssigned Task[]       @relation("TaskAssignee")
+  comments      Comment[]
+  activities    ActivityEvent[] @relation("ActivityActor")
+>>>>>>> origin/main
 
   @@map("user")
 }
@@ -35,8 +52,9 @@ model Session {
   updatedAt DateTime
   ipAddress String?
   userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("session")

@@ -1,0 +1,6 @@
+[allowlist]
+description = "Allowlist dummy Better Auth secrets in CI workflows"
+regexes = [
+  '''abcdefghijklmnopqrstuvwxyz123456''',
+  '''0123456789abcdef0123456789abcdef'''
+]

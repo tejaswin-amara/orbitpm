@@ -26,7 +26,20 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+<<<<<<< HEAD
       - name: Run migrations
         run: pnpm db:migrate:deploy
+=======
+      - name: Require production database secret
+>>>>>>> origin/main
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL || secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Set PRODUCTION_DATABASE_URL (preferred) or DATABASE_URL in the production environment secrets."
+            exit 1
+          fi
+      - name: Run production migrations
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL || secrets.DATABASE_URL }}
+        run: pnpm db:migrate:deploy
