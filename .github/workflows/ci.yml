@@ -33,22 +33,12 @@ jobs:
         if: github.event_name == 'pull_request'
         run: pnpm exec commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
       - run: pnpm api:lint
-<<<<<<< HEAD
-      - name: Build application
-        run: |
-          export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
-          export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
-          export BETTER_AUTH_URL="http://127.0.0.1:3000"
-          export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
-          pnpm build
-=======
       - run: pnpm build
         env:
-          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
+          DATABASE_URL: postgresql://postgres@127.0.0.1:5432/orbitpm
           BETTER_AUTH_SECRET: abcdefghijklmnopqrstuvwxyz123456
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
->>>>>>> origin/main
 
   security:
     runs-on: ubuntu-latest
@@ -56,10 +46,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
-<<<<<<< HEAD
-=======
       actions: read
->>>>>>> origin/main
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: { fetch-depth: 0 }
@@ -68,11 +55,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trivy filesystem scan
-<<<<<<< HEAD
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
-=======
         uses: aquasecurity/trivy-action@c03d123cb480c08c69b054af418ea5e69fe6e57e
->>>>>>> origin/main
         with:
           scan-type: fs
           scan-ref: .
@@ -119,17 +102,17 @@ jobs:
       - run: pnpm db:generate
       - run: pnpm db:migrate:deploy
         env:
-          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
+          DATABASE_URL: ******127.0.0.1:5432/orbitpm
       - run: pnpm build
         env:
-          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
+          DATABASE_URL: ******127.0.0.1:5432/orbitpm
           BETTER_AUTH_SECRET: abcdefghijklmnopqrstuvwxyz123456
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
         env:
-          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/orbitpm
+          DATABASE_URL: ******127.0.0.1:5432/orbitpm
           BETTER_AUTH_SECRET: abcdefghijklmnopqrstuvwxyz123456
           BETTER_AUTH_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000

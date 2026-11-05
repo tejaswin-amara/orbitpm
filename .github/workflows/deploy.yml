@@ -26,12 +26,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-<<<<<<< HEAD
-      - name: Run migrations
-        run: pnpm db:migrate:deploy
-=======
       - name: Require production database secret
->>>>>>> origin/main
         env:
           DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL || secrets.DATABASE_URL }}
         run: |
