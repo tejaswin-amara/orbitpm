@@ -1,6 +1,6 @@
 generator client {
-  provider   = "prisma-client"
-  output     = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
   moduleFormat = "esm"
 }
 
@@ -9,37 +9,37 @@ datasource db {
 }
 
 model User {
-  id              String      @id
+  id              String          @id
   name            String
-  email           String      @unique
+  email           String          @unique
   emailVerified   Boolean
   image           String?
-  role            String      @default("user")
-  banned          Boolean     @default(false)
+  role            UserRole        @default(MEMBER)
+  banned          Boolean         @default(false)
   banReason       String?
   banExpires      DateTime?
-  username        String?     @unique
+  username        String?         @unique
   displayUsername String?
   createdAt       DateTime
   updatedAt       DateTime
-  sessions      Session[]
-  accounts      Account[]
-  projectsCreated Project[]  @relation("ProjectCreator")
-  tasksAssigned Task[]       @relation("TaskAssignee")
-  comments      Comment[]
-  activities    ActivityEvent[] @relation("ActivityActor")
+  sessions        Session[]
+  accounts        Account[]
+  projectsCreated Project[]       @relation("ProjectCreator")
+  tasksAssigned   Task[]          @relation("TaskAssignee")
+  comments        Comment[]
+  activities      ActivityEvent[] @relation("ActivityActor")
 
   @@map("user")
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime
+  updatedAt      DateTime
+  ipAddress      String?
+  userAgent      String?
   userId         String
   impersonatedBy String?
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -49,20 +49,20 @@ model Session {
 }
 
 model Account {
-  id                    String   @id
-  accountId             String
-  providerId            String
-  userId                String
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
+  id                   String    @id
+  accountId            String
+  providerId           String
+  userId               String
+  accessToken          String?
+  refreshToken         String?
+  idToken              String?
+  accessTokenExpiresAt DateTime?
   refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime
-  updatedAt             DateTime
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope                String?
+  password             String?
+  createdAt            DateTime
+  updatedAt            DateTime
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@unique([providerId, accountId])
@@ -70,7 +70,7 @@ model Account {
 }
 
 model Verification {
-  id         String   @id
+  id         String    @id
   identifier String
   value      String
   expiresAt  DateTime
@@ -80,10 +80,6 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
-
-
-
-
 
 model Project {
   id          String        @id @default(cuid())
@@ -96,10 +92,11 @@ model Project {
   targetDate  DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  creator     User         @relation("ProjectCreator", fields: [creatorId], references: [id])
+  creator     User          @relation("ProjectCreator", fields: [creatorId], references: [id])
   tasks       Task[]
   comments    Comment[]
   activities  ActivityEvent[]
+
   @@unique([slug])
   @@index([status])
   @@index([creatorId])
@@ -128,38 +125,42 @@ model Task {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   projectId String?
   taskId    String?
   authorId  String
   body      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task      Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([projectId, createdAt])
   @@index([taskId, createdAt])
 }
 
 model ActivityEvent {
-  id          String   @id @default(cuid())
-  projectId   String?
-  taskId      String?
-  actorId     String
-  action      String
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  task        Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  actor       User     @relation("ActivityActor", fields: [actorId], references: [id])
+  id        String    @id @default(cuid())
+  projectId String?
+  taskId    String?
+  actorId   String
+  action    String
+  metadata  Json?
+  createdAt DateTime  @default(now())
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task      Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actor     User      @relation("ActivityActor", fields: [actorId], references: [id])
+
   @@index([createdAt])
   @@index([projectId, createdAt])
   @@index([taskId, createdAt])
 }
 
-
+enum UserRole {
+  MEMBER
+  ADMIN
+}
 
 enum ProjectStatus {
   PLANNING

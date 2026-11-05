@@ -30,7 +30,10 @@
     "validate": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm api:lint && pnpm build",
     "prepare": "echo skip lefthook",
     "postinstall": "prisma generate",
-    "admin:create": "tsx scripts/create-admin.ts"
+    "admin:create": "tsx scripts/create-admin.ts",
+    "audit:deps": "pnpm audit --prod --audit-level high",
+    "test:coverage": "vitest run --coverage",
+    "security:scan": "pnpm audit:deps"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -82,5 +85,12 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "deepmerge-ts": "8.0.2",
+      "mysql2": "3.23.1",
+      "source-map-js": "1.2.2"
+    }
   }
 }

@@ -1,0 +1,400 @@
+name: Comprehensive Security Audit
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with:
+          version: 12.9.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare audit directories
+      - name: Regenerate security lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --lockfile-only --ignore-scripts
+          cp pnpm-lock.yaml audit-logs/generated-pnpm-lock.yaml
+
+        run: mkdir -p audit-logs tools
+
+      - name: OpenSSF Scorecard scan
+        uses: ossf/scorecard-action@55891bbd73f2425e97637d96e306fc9d491d0b21
+        with:
+          results_file: audit-logs/scorecard.json
+          results_format: json
+          repo_token: ${{ github.token }}
+          publish_results: false
+
+      - name: Install Trivy
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+          "${RUNNER_TEMP}/bin/trivy" --version
+
+      - name: Install CodeQL CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip -o "${RUNNER_TEMP}/codeql.zip"
+          unzip -q "${RUNNER_TEMP}/codeql.zip" -d "${RUNNER_TEMP}/codeql"
+          echo "${RUNNER_TEMP}/codeql/codeql" >> "$GITHUB_PATH"
+          "${RUNNER_TEMP}/codeql/codeql/codeql" version
+
+      - name: Install Semgrep
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check --no-cache-dir semgrep
+          semgrep --version
+
+      - name: Install Gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset_url="$(curl -fsSL https://api.github.com/repos/gitleaks/gitleaks/releases/latest | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(a["browser_download_url"] for a in d["assets"] if a["name"].endswith("_linux_x64.tar.gz")))')"
+          curl -fsSL "$asset_url" | tar -xzf - -C "${RUNNER_TEMP}/bin" gitleaks
+          chmod +x "${RUNNER_TEMP}/bin/gitleaks"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+          "${RUNNER_TEMP}/bin/gitleaks" version
+
+      - name: Install TruffleHog
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b "${RUNNER_TEMP}/bin"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+          "${RUNNER_TEMP}/bin/trufflehog" --version
+
+      - name: Install Prowler
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find . -maxdepth 4 -type f \( -name '*.tf' -o -name 'Dockerfile*' -o -path './k8s/*' -o -path './.aws/*' -o -name 'cloudformation.yml' -o -name 'cloudformation.yaml' -o -name 'pulumi.*' \) | grep -q .; then
+            python3 -m pip install --disable-pip-version-check --no-cache-dir prowler
+            prowler --version
+          else
+            echo "Prowler not applicable: no cloud/IaC configuration detected."
+          fi
+
+      - name: Install Lynis
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y lynis
+          lynis show version
+
+      - name: Load Cloudflare security-audit-skill
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/cloudflare/security-audit-skill.git "${RUNNER_TEMP}/security-audit-skill"
+          {
+            echo "Cloudflare security-audit-skill:"
+            git -C "${RUNNER_TEMP}/security-audit-skill" rev-parse HEAD
+            echo
+            echo "Skill used as source-first audit guidance; it is an agent skill rather than an executable CLI."
+            sed -n '1,180p' "${RUNNER_TEMP}/security-audit-skill/skills/security-audit/SKILL.md"
+          } > audit-logs/cloudflare-security-audit-skill.txt
+
+      - name: Baseline tool inventory
+        shell: bash
+        run: |
+          {
+            echo "Commit: $(git rev-parse HEAD)"
+            echo "Node: $(node --version)"
+            echo "pnpm: $(pnpm --version)"
+            echo "Trivy: $("${RUNNER_TEMP}/bin/trivy" --version | head -1)"
+            echo "CodeQL: $(codeql version | head -1)"
+            echo "Semgrep: $(semgrep --version)"
+            echo "Gitleaks: $("${RUNNER_TEMP}/bin/gitleaks" version)"
+            echo "TruffleHog: $("${RUNNER_TEMP}/bin/trufflehog" --version | head -1)"
+            echo "Scorecard: $("${RUNNER_TEMP}/bin/scorecard" --version | head -1)"
+            echo "Prowler: $(prowler --version | head -1)"
+            echo "Lynis: $(lynis show version | head -1)"
+          } | tee audit-logs/tool-versions.txt
+
+      - name: Trivy filesystem scan
+        shell: bash
+        run: |
+          "${RUNNER_TEMP}/bin/trivy" fs .             --scanners vuln,misconfig,secret             --format json             --output audit-logs/trivy.json             --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL             --exit-code 0
+
+      - name: Semgrep SAST scan
+        shell: bash
+        run: |
+          semgrep scan --config auto --json --output audit-logs/semgrep.json . || true
+
+      - name: CodeQL database create and analyze
+        shell: bash
+        run: |
+          set -euo pipefail
+          codeql pack download codeql/javascript-queries
+          codeql database create audit-logs/codeql-db \
+            --language=javascript-typescript \
+            --source-root=. \
+            --build-mode=none \
+            --overwrite
+          codeql database analyze audit-logs/codeql-db \
+            codeql/javascript-queries:codeql-suites/javascript-security-and-quality.qls \
+            --format=sarif-latest \
+            --output=audit-logs/codeql.sarif \
+            --threads=2
+
+      - name: Gitleaks history scan
+        shell: bash
+        run: |
+          "${RUNNER_TEMP}/bin/gitleaks" detect             --source .             --report-format json             --report-path audit-logs/gitleaks.json             --redact             --no-banner || true
+
+      - name: Dependency audit
+        shell: bash
+        run: |
+          pnpm audit --prod --audit-level high --json > audit-logs/pnpm-audit.json || true
+
+      - name: TruffleHog filesystem scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          mv node_modules "${RUNNER_TEMP}/orbitpm-node_modules"
+          mv audit-logs "${RUNNER_TEMP}/orbitpm-audit-logs"
+          mkdir audit-logs
+          "${RUNNER_TEMP}/bin/trufflehog" filesystem . --json --no-update > "${RUNNER_TEMP}/trufflehog.jsonl" 2>&1 || true
+          mv "${RUNNER_TEMP}/trufflehog.jsonl" audit-logs/trufflehog.jsonl
+          rm -rf node_modules audit-logs
+          mv "${RUNNER_TEMP}/orbitpm-node_modules" node_modules
+          mv "${RUNNER_TEMP}/orbitpm-audit-logs" audit-logs
+
+      - name: Prowler contextual cloud scan
+        shell: bash
+        run: |
+          if find . -maxdepth 4 -type f \( -name '*.tf' -o -name 'Dockerfile*' -o -path './k8s/*' -o -path './.aws/*' -o -name 'cloudformation.yml' -o -name 'cloudformation.yaml' -o -name 'pulumi.*' \) | grep -q .; then
+            prowler aws --output-formats json-ocsf --output-directory audit-logs/prowler
+          else
+            printf '%s\n' \
+              'NOT_APPLICABLE: no Terraform, Docker, Kubernetes, AWS, CloudFormation, or Pulumi configuration was found in the repository.' \
+              > audit-logs/prowler.txt
+          fi
+
+      - name: Lynis runner baseline
+        shell: bash
+        run: |
+          lynis audit system --quick --no-colors > audit-logs/lynis.txt 2>&1 || true
+
+      - name: Build application for Lighthouse
+        shell: bash
+        run: |
+          export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
+          export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
+          export BETTER_AUTH_URL="http://127.0.0.1:3000"
+          export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
+          pnpm build
+
+      - name: Start application for DAST and Lighthouse
+        shell: bash
+        run: |
+          set -euo pipefail
+          export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/orbitpm"
+          export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
+          export BETTER_AUTH_URL="http://127.0.0.1:3000"
+          export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
+          nohup pnpm start > audit-logs/next-start.txt 2>&1 &
+          echo $! > audit-logs/next.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat audit-logs/next-start.txt
+          exit 1
+
+      - name: OWASP ZAP baseline scan
+        shell: bash
+        run: |
+          docker run --rm --network host \
+            -v "$(pwd)/audit-logs:/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://127.0.0.1:3000/ -J zap.json -r zap.html || true
+
+      - name: Generate SBOM
+        shell: bash
+        run: |
+          "${RUNNER_TEMP}/bin/trivy" fs . --format cyclonedx --output audit-logs/sbom.cdx.json --scanners vuln
+
+      - name: Lighthouse local security/performance audit
+        shell: bash
+        run: |
+          npx --yes lighthouse@latest http://127.0.0.1:3000/             --output=json             --output-path="$(pwd)/audit-logs/lighthouse.json"             --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"             --only-categories=performance,accessibility,best-practices,seo || true
+
+      - name: Summarize discovered audit inputs
+        shell: bash
+        run: |
+          {
+            echo "# Security audit evidence"
+            echo
+            echo "## Repository"
+            git rev-parse HEAD
+            echo
+            echo "## Configuration files"
+            find . -maxdepth 3 -type f \( -name 'vercel.json' -o -name 'next.config.*' -o -name 'package.json' -o -name '*.yml' -o -name '*.yaml' -o -name '.env*' \) | sort
+            echo
+            echo "## Potential secret literals"
+            git grep -n -E '0123456789abcdef|postgres:postgres|BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY|AKIA[0-9A-Z]{16}' -- . ':!pnpm-lock.yaml' || true
+          } > audit-logs/recon-summary.txt
+
+      - name: Summarize audit findings
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p audit-logs
+          python3 - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+
+          root = Path("audit-logs")
+          out = ["# Comprehensive security audit summary", "", f"Commit: {Path('.git/HEAD').read_text().strip()}", ""]
+
+          def load_json(name):
+              path = root / name
+              try:
+                  return json.loads(path.read_text())
+              except Exception:
+                  return None
+
+          trivy = load_json("trivy.json")
+          if isinstance(trivy, dict):
+              results = trivy.get("Results", [])
+              findings = [x for r in results for x in (r.get("Vulnerabilities") or [])]
+              out += [
+                  "## Trivy",
+                  f"- vulnerability findings: {len(findings)}",
+                  f"- severities: {dict(Counter(x.get('Severity','UNKNOWN') for x in findings))}",
+                  "",
+              ]
+          else:
+              out += ["## Trivy", "- result unavailable", ""]
+
+          semgrep = load_json("semgrep.json")
+          if isinstance(semgrep, dict):
+              results = semgrep.get("results", [])
+              out += [
+                  "## Semgrep",
+                  f"- findings: {len(results)}",
+                  f"- severities: {dict(Counter((x.get('extra') or {}).get('severity','UNKNOWN') for x in results))}",
+              ]
+              for finding in results[:20]:
+                  start = finding.get("start") or {}
+                  out.append(
+                      f"- {finding.get('check_id','UNKNOWN')} | {finding.get('path','?')}:{start.get('line','?')} | "
+                      f"{(finding.get('extra') or {}).get('severity','UNKNOWN')}: {(finding.get('extra') or {}).get('message','')}"
+                  )
+              out.append("")
+          else:
+              out += ["## Semgrep", "- result unavailable", ""]
+
+          codeql = load_json("codeql.sarif")
+          if isinstance(codeql, dict):
+              results = [r for run in codeql.get("runs", []) for r in run.get("results", [])]
+              out += ["## CodeQL", f"- findings: {len(results)}", ""]
+          else:
+              out += ["## CodeQL", "- result unavailable", ""]
+
+          gitleaks = load_json("gitleaks.json")
+          if isinstance(gitleaks, list):
+              out += ["## Gitleaks", f"- findings: {len(gitleaks)}"]
+              for finding in gitleaks[:20]:
+                  out.append(
+                      f"- {finding.get('RuleID','UNKNOWN')} | {finding.get('File','?')}:{finding.get('StartLine','?')} | "
+                      f"{finding.get('Description','')}"
+                  )
+              out.append("")
+          else:
+              out += ["## Gitleaks", "- result unavailable", ""]
+
+          truffle = root / "trufflehog.jsonl"
+          if truffle.exists():
+              lines = [x for x in truffle.read_text().splitlines() if x.strip()]
+              verified = 0
+              for line in lines:
+                  try:
+                      if json.loads(line).get("Verified") is True:
+                          verified += 1
+                  except Exception:
+                      pass
+              out += ["## TruffleHog", f"- findings/events: {len(lines)}", f"- verified findings: {verified}", ""]
+          else:
+              out += ["## TruffleHog", "- result unavailable", ""]
+
+          pnpm_audit = load_json("pnpm-audit.json")
+          if isinstance(pnpm_audit, dict):
+              vulns = ((pnpm_audit.get("metadata") or {}).get("vulnerabilities") or {})
+              out += ["## pnpm audit", f"- metadata: {vulns}", ""]
+          else:
+              out += ["## pnpm audit", "- result unavailable", ""]
+
+          scorecard = load_json("scorecard.json")
+          if isinstance(scorecard, dict):
+              score = scorecard.get("score")
+              checks = scorecard.get("checks") or []
+              out += ["## OpenSSF Scorecard", f"- score: {score if score is not None else 'unavailable'}", f"- checks: {len(checks)}", ""]
+          else:
+              out += ["## OpenSSF Scorecard", "- result unavailable", ""]
+
+          prowler = root / "prowler.txt"
+          out += ["## Prowler", f"- {prowler.read_text().strip() if prowler.exists() else 'result unavailable'}", ""]
+
+          lighthouse = load_json("lighthouse.json")
+          if isinstance(lighthouse, dict):
+              cats = lighthouse.get("categories") or {}
+              scores = {k: v.get("score") for k, v in cats.items() if isinstance(v, dict)}
+              out += ["## Lighthouse", f"- category scores: {scores}", ""]
+          else:
+              out += ["## Lighthouse", "- result unavailable", ""]
+
+          sbom = load_json("sbom.cdx.json")
+          if isinstance(sbom, dict):
+              out += ["## SBOM", f"- components: {len(sbom.get('components') or [])}", ""]
+          else:
+              out += ["## SBOM", "- result unavailable", ""]
+
+          summary_text = "\n".join(out) + "\n"
+          Path("audit-logs/summary.md").write_text(summary_text)
+          print(summary_text)
+          Path(__import__("os").environ["GITHUB_STEP_SUMMARY"]).write_text(summary_text)
+          PY
+
+      - name: Upload audit logs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: orbitpm-security-audit-${{ github.sha }}
+          path: audit-logs/
+          if-no-files-found: error
+          retention-days: 14

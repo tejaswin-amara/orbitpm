@@ -116,6 +116,24 @@ pnpm api:lint
 pnpm db:studio
 ```
 
+## Engineering baseline
+
+OrbitPM follows the repository's Awesome Dev Pipeline with a small, stack-appropriate footprint:
+
+- Conventional Commits + commitlint + Lefthook.
+- mise for runtime/tool versions.
+- Next.js + React + Tailwind + source-owned accessible components.
+- TanStack Query + React Hook Form + Zod.
+- PostgreSQL + Prisma + Better Auth.
+- Vitest + Playwright + axe-core.
+- OpenAPI + Spectral.
+- Gitleaks + TruffleHog + Semgrep + CodeQL + Trivy + Scorecard + OWASP ZAP + SBOM checks.
+- GitHub Actions + Dependabot.
+- AGENTS.md + CLAUDE.md + local review commands based on the Ponytail and agent-tooling principles.
+- External integrations are optional adapters. The public-apis catalog is used for discovery; providers are not runtime dependencies of the core product.
+
+The pipeline deliberately does not add Redis, BullMQ, Kubernetes, Prometheus/Grafana, or another backend service. Those are escalation paths only when measured requirements justify them.
+
 ## Documentation
 
 - `docs/requirements.md` — product requirements and acceptance criteria.

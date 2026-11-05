@@ -121,7 +121,9 @@ paths:
       operationId: deleteTaskById
       tags: [Tasks]
       security: [{ cookieAuth: [] }]
-      responses: { "204": { description: Deleted } }
+      responses:
+        "204": { description: Deleted }
+        "403": { description: Forbidden }
   /api/projects/{projectId}/comments:
     parameters: [{ $ref: "#/components/parameters/projectId" }]
     post:
